@@ -1,0 +1,113 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лунная Доставка</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <h1 id="game-title">🌘 ЛУННАЯ ДОСТАВКА</h1>
+    <div class="stats">
+        <div class="stat-block">
+            <span class="label">Кредиты</span>
+            <span class="value money" id="val-money">0</span>
+        </div>
+        <div class="stat-block">
+            <span class="label">Рейтинг</span>
+            <span class="value rep" id="val-reputation">100</span>
+            <div class="rep-bar-wrap"><div id="reputation-bar"></div></div>
+        </div>
+        <div class="stat-block">
+            <span class="label">Сол</span>
+            <span class="value" id="val-sol">1</span>
+        </div>
+        <div class="stat-block">
+            <span class="label">Тик</span>
+            <span class="value" id="val-tick">0</span>
+        </div>
+    </div>
+    <div class="top-actions">
+        <div class="speed-control">
+            <span class="speed-icon">⚡</span>
+            <input type="range" id="speed-slider" class="speed-slider" min="1" max="3" step="0.1" value="1">
+            <span class="speed-value" id="speed-value">x1.0</span>
+        </div>
+        <button class="btn" id="btn-pause">⏸ Пауза</button>
+        <button class="btn" id="btn-new-game">🔄 Новая игра</button>
+    </div>
+</header>
+
+<main class="layout">
+    <!-- Левая панель: роверы -->
+    <aside class="panel left-panel">
+        <h2 id="rovers-title">🤖 Роверы</h2>
+        <div class="panel-content">
+            <div id="rovers-list"></div>
+
+            <div class="buy-section">
+                <h3>Купить ровер</h3>
+                <div class="buy-row">
+                    <button class="btn btn-small" id="btn-buy-scout">Разведчик (150💰)</button>
+                    <button class="btn btn-small" id="btn-buy-hauler">Тягач (350💰)</button>
+                    <button class="btn btn-small" id="btn-buy-explorer">Следопыт (550💰)</button>
+                </div>
+            </div>
+
+            <div class="buy-section">
+                <h3 id="legend-title">🗺 Зоны Луны</h3>
+                <div id="legend-list"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Центр: только карта -->
+    <section class="center-panel">
+        <div class="map-container"></div>
+    </section>
+
+    <!-- Правая панель: заказы -->
+    <aside class="panel right-panel">
+        <h2 id="orders-title">📦 Заказы</h2>
+        <div class="panel-content">
+            <div id="orders-list"></div>
+        </div>
+    </aside>
+
+    <!-- Низ: объединённая панель (доставка + журнал) -->
+    <section class="panel bottom-panel">
+        <div class="bottom-left">
+            <h3 class="bottom-title">🚀 Доставка</h3>
+            <div id="delivery-info"><div class="hint">Выберите заказ и ровера</div></div>
+            <button class="btn btn-primary btn-deliver" id="btn-deliver" disabled>🚀 Доставить</button>
+        </div>
+        <div class="bottom-right">
+            <h3 class="bottom-title" id="events-title">📡 Журнал событий</h3>
+            <div id="events-list"></div>
+        </div>
+    </section>
+</main>
+
+<div id="flash"></div>
+
+<div class="modal" id="modal-gameover">
+    <div class="modal-content">
+        <h2>💀 РЕЙТИНГ БАЗЫ УТРАЧЕН</h2>
+        <p id="gameover-text"></p>
+        <button class="btn btn-primary" onclick="location.reload()">Новая игра</button>
+    </div>
+</div>
+
+<script src="js/constants.js"></script>
+<script src="js/texts.js"></script>
+<script src="js/db.js"></script>
+<script src="js/map.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
