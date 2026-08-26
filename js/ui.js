@@ -4,18 +4,21 @@ const UI = (() => {
     let selectedOrderId = null;
     let selectedRoverId = null;
 
+    // ---------- Цвет срочности (жёлтый → красный) ----------
     function getUrgencyColor(urgency, maxUrgency) {
         const pct = Math.max(0, Math.min(1, urgency / maxUrgency));
         const hue = Math.round(pct * 50);
         return `hsl(${hue}, 85%, 55%)`;
     }
 
+    // ---------- Цвет рейтинга (зелёный → красный) ----------
     function getReputationColor(reputation, max) {
         const pct = Math.max(0, Math.min(1, reputation / max));
         const hue = Math.round(pct * 120);
         return `hsl(${hue}, 70%, 55%)`;
     }
 
+    // ---------- Проверка доступности заказа для ровера ----------
     function isOrderAvailableForRover(rover, order) {
         if (!rover || rover.status !== ROVER_STATUS.IDLE) return false;
         if (order.weight > rover.capacity) return false;
@@ -263,19 +266,34 @@ const UI = (() => {
 
         if (!info || !btn) return;
 
+        // --- ЛОГИКА ПРОВЕРКИ ВАЛИДНОСТИ ВЫБОРА ---
+        // Сбрасываем выбор, если он стал невалидным из-за изменений в игре
+        let isOrderSelectionValid = false;
+        let isRoverSelectionValid = false;
+
         if (selectedOrderId) {
             const order = Game.orders.find(o => o.id === selectedOrderId);
-            if (!order || order.status !== ORDER_STATUS.PENDING) {
-                selectedOrderId = null;
+            isOrderSelectionValid = order && order.status === ORDER_STATUS.PENDING;
+            if (isOrderSelectionValid) {
+                const activeDelivery = Game.deliveries.find(d => d.orderId === selectedOrderId);
+                if (activeDelivery) {
+                    isOrderSelectionValid = false;
+                }
             }
         }
 
         if (selectedRoverId) {
             const rover = Game.rovers.find(r => r.id === selectedRoverId);
-            if (!rover) {
-                selectedRoverId = null;
-            }
+            isRoverSelectionValid = rover && rover.status === ROVER_STATUS.IDLE;
         }
+
+        if (selectedOrderId && !isOrderSelectionValid) {
+            selectedOrderId = null;
+        }
+        if (selectedRoverId && !isRoverSelectionValid) {
+            selectedRoverId = null;
+        }
+        // --- КОНЕЦ ПРОВЕРКИ ВАЛИДНОСТИ ---
 
         let activeDeliveriesHtml = '';
         if (Game.deliveries.length > 0) {
@@ -374,31 +392,39 @@ const UI = (() => {
         MapView.renderOrders(Game.orders, selectedOrderId);
     }
 
+    // УПРОЩЕНО: просто переключаем выбор, валидация происходит в renderDeliveryPanel
     function selectOrder(id) {
-        const order = Game.orders.find(o => o.id === id);
-        if (!order || order.status !== ORDER_STATUS.PENDING) return;
-        const activeDelivery = Game.deliveries.find(d => d.orderId === id);
-        if (activeDelivery) return;
         selectedOrderId = (selectedOrderId === id) ? null : id;
         renderOrders();
         renderDeliveryPanel();
         MapView.renderOrders(Game.orders, selectedOrderId);
     }
 
+    // УПРОЩЕНО: просто переключаем выбор, валидация происходит в renderDeliveryPanel
     function selectRover(id) {
-        const rover = Game.rovers.find(r => r.id === id);
-        if (!rover) return;
-        if (rover.status === ROVER_STATUS.DELIVERING) return;
         selectedRoverId = (selectedRoverId === id) ? null : id;
         renderRovers();
         renderDeliveryPanel();
-        window._selectedRoverForHighlight = selectedRoverId ? rover : null;
+        window._selectedRoverForHighlight = selectedRoverId ? Game.rovers.find(r => r.id === selectedRoverId) : null;
         MapView.renderRovers(Game.rovers, selectedRoverId);
         MapView.renderOrders(Game.orders, selectedOrderId);
     }
 
     async function onDeliver() {
         if (!selectedOrderId || !selectedRoverId) return;
+        
+        // ФИНАЛЬНАЯ ПРОВЕРКА перед запуском доставки
+        const rover = Game.rovers.find(r => r.id === selectedRoverId);
+        const order = Game.orders.find(o => o.id === selectedOrderId);
+        if (!rover || !order || rover.status !== ROVER_STATUS.IDLE || order.status !== ORDER_STATUS.PENDING) {
+            selectedOrderId = null;
+            selectedRoverId = null;
+            window._selectedRoverForHighlight = null;
+            renderAll();
+            flashMessage(TEXTS.hintImpossible);
+            return;
+        }
+
         const result = await Game.startDelivery(selectedRoverId, selectedOrderId);
         if (!result.ok) {
             flashMessage(result.reason);
@@ -464,6 +490,7 @@ const UI = (() => {
         else valueLabel.classList.add('speed-high');
     }
 
+    // ИЗМЕНЕНО: убрана задержка setTimeout, скорость меняется мгновенно
     function onSpeedChange(e) {
         const newSpeed = parseFloat(e.target.value);
         Game.setSpeed(newSpeed);
