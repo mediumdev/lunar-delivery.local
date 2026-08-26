@@ -1,6 +1,7 @@
-// app.js
+// === app.js: Точка входа, инициализация текстов, карты и запуск игрового цикла ===
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // Инициализация текстовых элементов интерфейса из словаря TEXTS
     const setText = (id, text) => {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
@@ -22,15 +23,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     setText('btn-pause', TEXTS.pause);
     setText('gameover-title', TEXTS.gameOver);
 
+    // Инициализация карты и пользовательского интерфейса
     const mapContainer = document.querySelector('.map-container');
     if (mapContainer) MapView.init(mapContainer);
 
     UI.init();
+    
+    // Загрузка сохранённого состояния игры из IndexedDB
     const data = await Game.loadGame();
     MapView.renderZones(data.zones);
     UI.renderAll();
     UI.renderEvents();
 
+    // Генерация легенды зон на основе констант ZONE_TYPES
     const legendList = document.getElementById('legend-list');
     if (legendList) {
         legendList.innerHTML = '';
@@ -46,9 +51,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
+    // Подписка UI на обновления состояния игры
     Game.addUpdateCallback(() => {
         UI.renderAll();
     });
 
+    // Запуск игрового цикла (requestAnimationFrame)
     Game.start();
 });

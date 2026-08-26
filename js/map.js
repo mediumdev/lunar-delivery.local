@@ -1,4 +1,4 @@
-// map.js
+// === map.js: Визуализация карты, отрисовка зон, маркеров роверов и заказов ===
 
 const MapView = (() => {
     let mapEl = null;
@@ -22,6 +22,7 @@ const MapView = (() => {
         return true;
     }
 
+    // Создание DOM-структуры сетки карты
     function init(container) {
         mapEl = document.createElement('div');
         mapEl.className = 'lunar-map';
@@ -36,6 +37,7 @@ const MapView = (() => {
         container.appendChild(mapEl);
     }
 
+    // Отрисовка зон карты (база, кратеры, горы, темная сторона)
     function renderZones(zones) {
         if (!mapEl) return;
         const savedOverlay = overlayEl;
@@ -90,6 +92,7 @@ const MapView = (() => {
         };
     }
 
+    // Отрисовка и анимация маркеров роверов на карте
     function renderRovers(rovers, selectedRoverId) {
         if (!overlayEl) return;
         const existingMarkers = new Map();
@@ -127,6 +130,7 @@ const MapView = (() => {
                 badge.style.display = 'none';
             }
 
+            // Анимация тряски при поломке или пыльной буре
             if (r.shaking) {
                 r.shaking = false;
                 const isSel = (r.id === selectedRoverId);
@@ -154,6 +158,7 @@ const MapView = (() => {
             existingMarkers.delete(r.id);
         }
 
+        // Удаление старых маркеров с анимацией исчезновения
         existingMarkers.forEach(el => {
             el.style.transition = 'opacity 0.3s, transform 0.3s';
             el.style.opacity = '0';
@@ -168,6 +173,7 @@ const MapView = (() => {
         overlayEl.style.setProperty('--rover-transition-duration', `${tickInterval}ms`);
     }
 
+    // Отрисовка маркеров заказов с цветовой индикацией срочности
     function renderOrders(orders, selectedOrderId) {
         if (!overlayEl) return;
         const roverForCheck = window._selectedRoverForHighlight || null;
@@ -223,6 +229,7 @@ const MapView = (() => {
         });
     }
 
+    // Визуализация пути следования ровера точками
     function renderPath(path) {
         if (!overlayEl) return;
         overlayEl.querySelectorAll('.path-dot').forEach(el => el.remove());

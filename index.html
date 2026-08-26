@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- === index.html: Структура интерфейса игры и шаблоны (templates) для динамического рендеринга === -->
  
 <!DOCTYPE html>
 <html lang="ru">
@@ -10,6 +10,7 @@
 </head>
 <body>
 
+<!-- Верхняя панель: статистика базы и управление временем -->
 <header class="topbar">
     <h1 id="game-title">🌘 ЛУННАЯ ДОСТАВКА</h1>
     <div class="stats">
@@ -43,6 +44,7 @@
 </header>
 
 <main class="layout">
+    <!-- Левая панель: управление роверами и легенда карты -->
     <aside class="panel left-panel">
         <h2 id="rovers-title">🤖 Роверы</h2>
         <div class="panel-content">
@@ -62,10 +64,12 @@
         </div>
     </aside>
 
+    <!-- Центральная панель: визуализация карты Луны -->
     <section class="panel center-panel">
         <div class="map-container"></div>
     </section>
 
+    <!-- Правая панель: список доступных заказов -->
     <aside class="panel right-panel">
         <h2 id="orders-title">📦 Заказы</h2>
         <div class="panel-content">
@@ -73,20 +77,24 @@
         </div>
     </aside>
 
+    <!-- Нижняя центральная панель: детали выбранной доставки и кнопка запуска -->
     <section class="panel delivery-panel">
         <h3 class="bottom-title" id="delivery-title">🚀 Доставка</h3>
         <div id="delivery-info" class="panel-content"></div>
         <button class="btn btn-primary btn-deliver" id="btn-deliver" disabled>🚀 Доставить</button>
     </section>
 
+    <!-- Нижняя правая панель: журнал событий -->
     <aside class="panel events-panel">
         <h3 class="bottom-title" id="events-title">📡 Журнал событий</h3>
         <div id="events-list" class="panel-content"></div>
     </aside>
 </main>
 
+<!-- Всплывающие уведомления -->
 <div id="flash"></div>
 
+<!-- Модальное окно конца игры (при потере рейтинга) -->
 <div class="modal" id="modal-gameover">
     <div class="modal-content">
         <h2 id="gameover-title">💀 РЕЙТИНГ БАЗЫ УТРАЧЕН</h2>
@@ -95,7 +103,7 @@
     </div>
 </div>
 
-<!-- ================= ШАБЛОНЫ (TEMPLATES) ================= -->
+<!-- ================= ШАБЛОНЫ (TEMPLATES) для клонирования через JS ================= -->
 <template id="tmpl-rover-card">
     <div class="rover-card">
         <div class="rover-header">
@@ -187,6 +195,7 @@
 </template>
 <!-- ======================================================= -->
 
+<!-- Подключение скриптов в правильном порядке зависимостей -->
 <script src="js/constants.js"></script>
 <script src="js/texts.js"></script>
 <script src="js/db.js"></script>

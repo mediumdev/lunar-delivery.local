@@ -1,24 +1,21 @@
-// ui.js
+// === ui.js: Управление интерфейсом, обработка кликов и обновление панелей ===
 
 const UI = (() => {
     let selectedOrderId = null;
     let selectedRoverId = null;
 
-    // ---------- Цвет срочности (жёлтый → красный) ----------
     function getUrgencyColor(urgency, maxUrgency) {
         const pct = Math.max(0, Math.min(1, urgency / maxUrgency));
         const hue = Math.round(pct * 50);
         return `hsl(${hue}, 85%, 55%)`;
     }
 
-    // ---------- Цвет рейтинга (зелёный → красный) ----------
     function getReputationColor(reputation, max) {
         const pct = Math.max(0, Math.min(1, reputation / max));
         const hue = Math.round(pct * 120);
         return `hsl(${hue}, 70%, 55%)`;
     }
 
-    // ---------- Проверка доступности заказа для ровера ----------
     function isOrderAvailableForRover(rover, order) {
         if (!rover || rover.status !== ROVER_STATUS.IDLE) return false;
         if (order.weight > rover.capacity) return false;
@@ -33,6 +30,7 @@ const UI = (() => {
         return true;
     }
 
+    // Навешивание обработчиков событий на кнопки и элементы карты
     function init() {
         const mapContainer = document.querySelector('.map-container');
         if (mapContainer) {
@@ -72,6 +70,7 @@ const UI = (() => {
         setBtnText('btn-buy-explorer', 'explorer');
     }
 
+    // Обновление верхней панели статистики (деньги, репутация, время)
     function renderTopBar() {
         const s = Game.state;
         if (!s) return;
@@ -94,12 +93,11 @@ const UI = (() => {
         }
     }
 
-    // ---------- Карточки роверов (с переиспользованием DOM) ----------
+    // Рендер списка роверов в левой панели
     function renderRovers() {
         const list = document.getElementById('rovers-list');
         if (!list) return;
 
-        // Собираем существующие карточки в Map для переиспользования
         const existingCards = new Map();
         list.querySelectorAll('.rover-card').forEach(card => {
             const id = parseInt(card.dataset.roverId);
@@ -117,7 +115,6 @@ const UI = (() => {
 
             let card = existingCards.get(r.id);
 
-            // Создаём карточку только если её ещё нет
             if (!card) {
                 card = tmpl.content.cloneNode(true).firstElementChild;
                 card.dataset.roverId = r.id;
@@ -128,7 +125,6 @@ const UI = (() => {
                 list.appendChild(card);
             }
 
-            // Обновляем состояние карточки
             card.classList.toggle('selected', r.id === selectedRoverId);
             card.classList.toggle('busy', r.status === ROVER_STATUS.DELIVERING);
 
@@ -156,7 +152,6 @@ const UI = (() => {
             card.querySelector('.stat-label-capacity').textContent = `📦 ${TEXTS.capacity}`;
             card.querySelector('.stat-val-capacity').textContent = `${r.capacity} ${TEXTS.kg}`;
 
-            // Перестраиваем кнопки (их мало, и они зависят от состояния)
             const actions = card.querySelector('.rover-actions');
             actions.innerHTML = '';
             if (r.status === ROVER_STATUS.IDLE) {
@@ -176,11 +171,10 @@ const UI = (() => {
             existingCards.delete(r.id);
         }
 
-        // Удаляем только те карточки, которых больше нет в списке роверов
         existingCards.forEach(card => card.remove());
     }
 
-    // ---------- Карточки заказов (с переиспользованием DOM) ----------
+    // Рендер списка доступных заказов в правой панели
     function renderOrders() {
         const list = document.getElementById('orders-list');
         if (!list) return;
@@ -188,14 +182,12 @@ const UI = (() => {
         const pending = Game.orders.filter(o => o.status === ORDER_STATUS.PENDING);
         const selectedRover = selectedRoverId ? Game.rovers.find(r => r.id === selectedRoverId) : null;
 
-        // Собираем существующие карточки в Map для переиспользования
         const existingCards = new Map();
         list.querySelectorAll('.order-card').forEach(card => {
             const id = parseInt(card.dataset.orderId);
             if (!isNaN(id)) existingCards.set(id, card);
         });
 
-        // Если заказов нет — показываем подсказку
         if (!pending.length) {
             existingCards.forEach(card => card.remove());
             if (!list.querySelector('.empty-hint')) {
@@ -214,7 +206,6 @@ const UI = (() => {
         for (const o of pending) {
             let card = existingCards.get(o.id);
 
-            // Создаём карточку только если её ещё нет
             if (!card) {
                 card = tmpl.content.cloneNode(true).firstElementChild;
                 card.dataset.orderId = o.id;
@@ -222,7 +213,6 @@ const UI = (() => {
                 list.appendChild(card);
             }
 
-            // Обновляем состояние карточки
             card.classList.toggle('selected', o.id === selectedOrderId);
             card.classList.toggle('in-progress', o.status === ORDER_STATUS.IN_PROGRESS);
 
@@ -249,10 +239,10 @@ const UI = (() => {
             existingCards.delete(o.id);
         }
 
-        // Удаляем только те карточки, которых больше нет в списке заказов
         existingCards.forEach(card => card.remove());
     }
 
+    // === Панель планирования доставки: показывает расчет и блокирует кнопку при невозможности ===
     function renderDeliveryPanel() {
         const info = document.getElementById('delivery-info');
         const btn = document.getElementById('btn-deliver');
@@ -354,6 +344,7 @@ const UI = (() => {
         }
         main.appendChild(grid);
 
+        // Отображение причины, почему доставка невозможна ("хотя бы один сценарий, где доставка невозможна")
         if (!check.ok) {
             const err = document.createElement('div');
             err.className = 'delivery-error';

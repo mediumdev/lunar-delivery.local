@@ -1,5 +1,6 @@
-// constants.js
+// === constants.js: Конфигурация игры, баланс, константы состояний и процедурная генерация карты ===
 
+// Основные параметры баланса игры: время тика, размеры карты, стартовые ресурсы
 const GAME_CONFIG = Object.freeze({
     TICK_INTERVAL: 1200,
     MAP_SIZE: 18,
@@ -19,12 +20,14 @@ const GAME_CONFIG = Object.freeze({
     GAME_OVER_REPUTATION: 0,
 });
 
+// Типы роверов: определяют компромисс между грузоподъёмностью, ёмкостью батареи, скоростью и стоимостью.
 const ROVER_TYPES = Object.freeze({
     scout:    { capacity: 20, maxBattery: 100, speed: 1.2, cost: 150, label: 'Разведчик' },
     hauler:   { capacity: 50, maxBattery: 90,  speed: 0.8, cost: 350, label: 'Тягач' },
     explorer: { capacity: 30, maxBattery: 160, speed: 1.0, cost: 550, label: 'Следопыт' },
 });
 
+// Типы зон карты: определяют риск поломки (risk) и множитель времени прохождения (speedFactor).
 const ZONE_TYPES = Object.freeze({
     base:      { risk: 0.00, speedFactor: 1.0, cssClass: 'zone-base',      label: 'База' },
     plains:    { risk: 0.03, speedFactor: 1.0, cssClass: 'zone-plains',    label: 'Равнины' },
@@ -33,11 +36,13 @@ const ZONE_TYPES = Object.freeze({
     darkside:  { risk: 0.35, speedFactor: 2.8, cssClass: 'zone-darkside',  label: 'Тёмная сторона' },
 });
 
+// Стартовый флот игрока при создании новой игры
 const INITIAL_ROVERS = Object.freeze([
     { type: 'scout',  name: 'R-01' },
     { type: 'hauler', name: 'R-02' },
 ]);
 
+// Статусы ровера для управления логикой и отображением в UI
 const ROVER_STATUS = Object.freeze({
     IDLE: 'idle',
     DELIVERING: 'delivering',
@@ -45,6 +50,7 @@ const ROVER_STATUS = Object.freeze({
     BROKEN: 'broken',
 });
 
+// Статусы заказа для отслеживания его жизненного цикла
 const ORDER_STATUS = Object.freeze({
     PENDING: 'pending',
     IN_PROGRESS: 'in_progress',
@@ -53,6 +59,11 @@ const ORDER_STATUS = Object.freeze({
     FAILED: 'failed',
 });
 
+// Процедурная генерация карты: 
+// - База всегда в центре (basePos).
+// - Равнины (plains) в радиусе 3 клеток от базы.
+// - Кратеры (craters) и горы (mountains) на среднем и дальнем расстоянии.
+// - Тёмная сторона (darkside) генерируется в дальнем правом нижнем углу (экстремальный риск).
 function generateMapZones(size, basePos) {
     const zones = [];
     for (let y = 0; y < size; y++) {

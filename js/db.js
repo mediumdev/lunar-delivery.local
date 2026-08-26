@@ -1,4 +1,4 @@
-// db.js
+// === db.js: Слой работы с IndexedDB для постоянного хранения данных игры ===
 
 const DB_NAME = 'lunar_delivery_db';
 const DB_VERSION = 2;
@@ -6,6 +6,7 @@ const STORES = ['rovers', 'orders', 'deliveries', 'events', 'state', 'zones'];
 
 let _db = null;
 
+// Открытие базы данных и создание хранилищ при необходимости
 function openDB() {
     return new Promise((resolve, reject) => {
         if (_db) return resolve(_db);
@@ -20,6 +21,7 @@ function openDB() {
                 }
             });
 
+            // Очистка данных при мажорном обновлении версии схемы
             if (oldVersion > 0 && oldVersion < 2) {
                 STORES.forEach(name => {
                     try {
@@ -34,10 +36,12 @@ function openDB() {
     });
 }
 
+// Вспомогательная функция для получения транзакции
 function tx(storeName, mode = 'readonly') {
     return openDB().then(db => db.transaction(storeName, mode).objectStore(storeName));
 }
 
+// CRUD операции для работы с хранилищами
 function dbPut(storeName, value) {
     return tx(storeName, 'readwrite').then(store => new Promise((res, rej) => {
         const r = store.put(value);
@@ -86,6 +90,7 @@ function dbClear(storeName) {
     }));
 }
 
+// Полная очистка всех хранилищ для начала новой игры
 async function dbClearAll() {
     for (const s of STORES) await dbClear(s);
 }

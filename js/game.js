@@ -1,4 +1,4 @@
-// game.js
+// === game.js: Ядро игровой логики, расчеты и игровой цикл (tick) ===
 
 const Game = (() => {
     let state = null;
@@ -33,6 +33,7 @@ const Game = (() => {
         });
     }
 
+    // === Инициализация новой игры: сброс БД, генерация карты и стартовых роверов ===
     async function newGame() {
         await dbClearAll();
         zones = generateMapZones(GAME_CONFIG.MAP_SIZE, GAME_CONFIG.BASE_POSITION);
@@ -69,6 +70,7 @@ const Game = (() => {
         return { state, rovers, orders, zones };
     }
 
+    // === Загрузка игры: восстановление состояния роверов, заказов и карты из БД ===
     async function loadGame() {
         const states = await dbGetAll('state');
         state = states[0];
@@ -92,6 +94,7 @@ const Game = (() => {
         return { state, rovers, orders, zones };
     }
 
+    // === Генерация заказа: расчет веса, награды, срочности и риска на основе зоны ===
     async function spawnOrder() {
         if (!state) return;
         if (orders.filter(o => o.status === ORDER_STATUS.PENDING).length >= GAME_CONFIG.MAX_ACTIVE_ORDERS) return;
@@ -124,6 +127,7 @@ const Game = (() => {
         return order;
     }
 
+    // === Расчет стоимости доставки ===
     function calculateDeliveryCost(rover, order) {
         const distance = manhattan(rover, order.destination);
         const path = buildPath(rover, order.destination);
@@ -133,13 +137,15 @@ const Game = (() => {
             totalRisk += ZONE_TYPES[z.type].risk;
         }
         const avgRisk = path.length ? totalRisk / path.length : 0;
+        
+        // Штраф за вес: чем ближе вес к максимуму, тем выше расход батареи
         const weightPenalty = 1 + (order.weight / rover.capacity);
         const batteryCost = Math.ceil(distance * weightPenalty * (1 + avgRisk * 2));
 
         let timeFactor = 0;
         for (const cell of path) {
             const z = getZoneAt(cell.x, cell.y);
-            timeFactor += ZONE_TYPES[z.type].speedFactor;
+            timeFactor += ZONE_TYPES[z.type].speedFactor; // "Разные зоны отличаются по скорости"
         }
         const avgSpeedFactor = path.length ? timeFactor / path.length : 1;
         const ticks = Math.ceil((distance * avgSpeedFactor) / rover.speed);
@@ -147,19 +153,22 @@ const Game = (() => {
         return { distance, batteryCost, ticks, path, avgRisk };
     }
 
+    // === Валидация: "Ровер не должен везти заказ, если не хватает батареи или грузоподъёмности" ===
     function canDeliver(rover, order) {
         if (rover.status === ROVER_STATUS.BROKEN) return { ok: false, reason: TEXTS.roverBroken };
         if (rover.status !== ROVER_STATUS.IDLE) return { ok: false, reason: TEXTS.roverBusy };
-        if (order.weight > rover.capacity) return { ok: false, reason: TEXTS.notEnoughCapacity };
+        if (order.weight > rover.capacity) return { ok: false, reason: TEXTS.notEnoughCapacity }; // Сценарий невозможной доставки
         
         const activeDelivery = deliveries.find(d => d.orderId === order.id);
         if (activeDelivery) return { ok: false, reason: TEXTS.orderAlreadyDelivering };
         
         const calc = calculateDeliveryCost(rover, order);
-        if (calc.batteryCost > rover.battery) return { ok: false, reason: TEXTS.notEnoughBattery };
+        if (calc.batteryCost > rover.battery) return { ok: false, reason: TEXTS.notEnoughBattery }; // Сценарий невозможной доставки
+        
         return { ok: true, calc };
     }
 
+    // === Запуск доставки: создание записи в deliveries и смена статуса ровера ===
     async function startDelivery(roverId, orderId) {
         const rover = rovers.find(r => r.id === roverId);
         const order = orders.find(o => o.id === orderId);
@@ -189,6 +198,7 @@ const Game = (() => {
         return { ok: true };
     }
 
+    // === Основной игровой тик: движение, риск, списание батареи, завершение доставки ===
     async function tick() {
         if (!state || state.paused || state.gameOver) return;
         state.tick++;
@@ -203,6 +213,7 @@ const Game = (() => {
             const zone = getZoneAt(currentCell.x, currentCell.y);
             const zoneData = ZONE_TYPES[zone.type];
 
+            // Риск маршрута может привести к поломке ровера
             if (Math.random() < zoneData.risk * 0.5) {
                 rover.status = ROVER_STATUS.BROKEN;
                 rover.battery = 0;
@@ -224,6 +235,7 @@ const Game = (() => {
                 d.step++;
             }
 
+            // Постепенное списание батареи на каждом шаге
             const batteryPerStep = d.batteryCost / Math.max(1, d.totalSteps);
             rover.battery = Math.max(0, rover.battery - batteryPerStep);
 
@@ -244,6 +256,7 @@ const Game = (() => {
                 addEvent(TEXTS.eventBonus.replace('{rover}', rover.name).replace('{amount}', bonus));
             }
 
+            // После доставки меняются очки/деньги, батарея и статус заказа
             if (d.step >= d.totalSteps) {
                 rover.x = GAME_CONFIG.BASE_POSITION.x;
                 rover.y = GAME_CONFIG.BASE_POSITION.y;
@@ -258,10 +271,13 @@ const Game = (() => {
                 deliveries = deliveries.filter(x => x.id !== d.id);
                 addEvent(TEXTS.deliverySuccess.replace('{reward}', order.reward));
             } else {
+                // Сохраняем обновленный шаг доставки и путь в БД
+                await dbPut('deliveries', d);
                 await dbPut('rovers', rover);
             }
         }
 
+        // Уменьшение срочности и потеря репутации при просрочке (цель игры - не потерять рейтинг)
         for (const order of orders) {
             if (order.status === ORDER_STATUS.PENDING) {
                 order.urgency -= GAME_CONFIG.URGENCY_DECAY_PER_TICK;
@@ -275,6 +291,7 @@ const Game = (() => {
             }
         }
 
+        // Автоматическая зарядка роверов на базе
         for (const rover of rovers) {
             if (rover.status === ROVER_STATUS.CHARGING) {
                 rover.battery = Math.min(rover.maxBattery, rover.battery + GAME_CONFIG.BATTERY_CHARGE_PER_TICK);
@@ -292,6 +309,7 @@ const Game = (() => {
 
         await dbPut('state', state);
 
+        // Проверка условия проигрыша
         if (state.reputation <= GAME_CONFIG.GAME_OVER_REPUTATION) {
             state.gameOver = true;
             await dbPut('state', state);
@@ -351,6 +369,7 @@ const Game = (() => {
         return { ok: true, rover };
     }
 
+    // === Игровой цикл на requestAnimationFrame с поддержкой ускорения времени ===
     function gameLoop(timestamp) {
         if (!state) return;
         if (!state.paused && !state.gameOver) {
@@ -395,6 +414,7 @@ const Game = (() => {
     function manhattan(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
     function getZoneAt(x, y) { return zones.find(z => z.x === x && z.y === y) || { type: 'plains' }; }
     
+    // Простой алгоритм построения пути (сначала по X, потом по Y)
     function buildPath(from, to) {
         const path = [];
         let x = from.x, y = from.y;

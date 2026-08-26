@@ -1,6 +1,8 @@
-// texts.js
+// === texts.js: Централизованный словарь текстов для UI, событий и сообщений об ошибках ===
+// Позволяет легко менять формулировки или добавлять локализацию без правки игровой логики.
 
 const TEXTS = Object.freeze({
+    // === Основные заголовки и метрики верхней панели ===
     title: '🌘 ЛУННАЯ ДОСТАВКА',
     subtitle: 'Симулятор логистики лунной базы',
 
@@ -16,6 +18,7 @@ const TEXTS = Object.freeze({
     buyTitle: 'Купить ровер',
     deliveryTitle: '🚀 Доставка',
 
+    // === Параметры заказов и роверов (отображаются в карточках и панели доставки) ===
     weight: 'Вес',
     kg: 'кг',
     battery: 'Батарея',
@@ -30,6 +33,7 @@ const TEXTS = Object.freeze({
     time: 'Время',
     ticks: 'тиков',
 
+    // === Текстовые представления статусов сущностей ===
     status_idle: 'Свободен',
     status_delivering: 'В доставке',
     status_charging: 'Заряжается',
@@ -41,6 +45,7 @@ const TEXTS = Object.freeze({
     order_expired: 'Просрочен',
     order_failed: 'Провален',
 
+    // === Названия кнопок и действий ===
     deliver: '🚀 Доставить',
     charge: 'Зарядить',
     repair: 'Починить',
@@ -52,6 +57,7 @@ const TEXTS = Object.freeze({
     close: 'Закрыть',
     speedLabel: '⚡ Скорость: x',
 
+    // === Подсказки и сообщения об ошибках валидации ===
     selectRover: 'Выберите ровера',
     selectOrder: 'Выберите заказ',
     selectOrderAndRover: 'Выберите заказ и ровера',
@@ -59,6 +65,8 @@ const TEXTS = Object.freeze({
     notEnoughCapacity: 'Заказ слишком тяжёлый для этого ровера',
     roverBusy: 'Ровер занят',
     roverBroken: 'Ровер повреждён — нужна починка',
+    
+    // === Сообщения о результатах действий и изменениях состояния ===
     deliverySuccess: '✅ Доставка успешна! +{reward} кредитов',
     orderExpired: '⏰ Заказ просрочен! Рейтинг −{loss}',
     cannotAfford: 'Недостаточно кредитов',
@@ -71,6 +79,7 @@ const TEXTS = Object.freeze({
     deliveringOrder: 'Везёт заказ #{id} ({progress}%)',
     orderTitleTemplate: 'Заказ #{id}: {weight}кг, {reward}💰, риск {risk}%',
 
+    // === Шаблоны событий для журнала (логика подставляет значения через .replace) ===
     eventRoverBroke: '⚠ {rover} попал в завал и повреждён',
     eventDustStorm: '🌪 Пыльная буря замедлила {rover}',
     eventBonus: '💎 {rover} нашёл лунный кристалл! +{amount} кредитов',
@@ -80,6 +89,7 @@ const TEXTS = Object.freeze({
     eventRoverCharging: '⚡ {rover} на зарядке',
     eventRoverRepaired: '🔧 {rover} починен и поставлен на зарядку',
     
+    // === Системные сообщения и подсказки интерфейса ===
     notFound: 'Не найдено',
     orderAlreadyDelivering: 'Заказ уже в доставке',
     hangarFull: 'Нет места в ангаре',
