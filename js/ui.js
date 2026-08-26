@@ -266,11 +266,9 @@ const UI = (() => {
 
         if (!info || !btn) return;
 
-        // --- ЛОГИКА ПРОВЕРКИ ВАЛИДНОСТИ ВЫБОРА ---
-        // Сбрасываем выбор, если он стал невалидным из-за изменений в игре
         let isOrderSelectionValid = false;
-        let isRoverSelectionValid = false;
 
+        // Проверяем валидность заказа
         if (selectedOrderId) {
             const order = Game.orders.find(o => o.id === selectedOrderId);
             isOrderSelectionValid = order && order.status === ORDER_STATUS.PENDING;
@@ -282,18 +280,16 @@ const UI = (() => {
             }
         }
 
-        if (selectedRoverId) {
-            const rover = Game.rovers.find(r => r.id === selectedRoverId);
-            isRoverSelectionValid = rover && rover.status === ROVER_STATUS.IDLE;
-        }
-
         if (selectedOrderId && !isOrderSelectionValid) {
             selectedOrderId = null;
         }
-        if (selectedRoverId && !isRoverSelectionValid) {
-            selectedRoverId = null;
+
+        if (selectedRoverId) {
+            const roverExists = Game.rovers.find(r => r.id === selectedRoverId);
+            if (!roverExists) {
+                selectedRoverId = null;
+            }
         }
-        // --- КОНЕЦ ПРОВЕРКИ ВАЛИДНОСТИ ---
 
         let activeDeliveriesHtml = '';
         if (Game.deliveries.length > 0) {
@@ -392,7 +388,6 @@ const UI = (() => {
         MapView.renderOrders(Game.orders, selectedOrderId);
     }
 
-    // УПРОЩЕНО: просто переключаем выбор, валидация происходит в renderDeliveryPanel
     function selectOrder(id) {
         selectedOrderId = (selectedOrderId === id) ? null : id;
         renderOrders();
@@ -400,7 +395,6 @@ const UI = (() => {
         MapView.renderOrders(Game.orders, selectedOrderId);
     }
 
-    // УПРОЩЕНО: просто переключаем выбор, валидация происходит в renderDeliveryPanel
     function selectRover(id) {
         selectedRoverId = (selectedRoverId === id) ? null : id;
         renderRovers();
@@ -413,7 +407,6 @@ const UI = (() => {
     async function onDeliver() {
         if (!selectedOrderId || !selectedRoverId) return;
         
-        // ФИНАЛЬНАЯ ПРОВЕРКА перед запуском доставки
         const rover = Game.rovers.find(r => r.id === selectedRoverId);
         const order = Game.orders.find(o => o.id === selectedOrderId);
         if (!rover || !order || rover.status !== ROVER_STATUS.IDLE || order.status !== ORDER_STATUS.PENDING) {
@@ -490,7 +483,6 @@ const UI = (() => {
         else valueLabel.classList.add('speed-high');
     }
 
-    // ИЗМЕНЕНО: убрана задержка setTimeout, скорость меняется мгновенно
     function onSpeedChange(e) {
         const newSpeed = parseFloat(e.target.value);
         Game.setSpeed(newSpeed);
