@@ -370,14 +370,20 @@ const Game = (() => {
         const rover = rovers.find(r => r.id === roverId);
         if (!rover || rover.status !== ROVER_STATUS.BROKEN) return { ok: false };
         if (state.money < GAME_CONFIG.REPAIR_COST) return { ok: false, reason: TEXTS.cannotAfford };
+        
         state.money -= GAME_CONFIG.REPAIR_COST;
-        rover.status = ROVER_STATUS.IDLE;
+        
+        rover.status = ROVER_STATUS.CHARGING; 
+        
         rover.battery = Math.floor(rover.maxBattery / 2);
         rover.x = GAME_CONFIG.BASE_POSITION.x;
         rover.y = GAME_CONFIG.BASE_POSITION.y;
+        
         await dbPut('state', state);
         await dbPut('rovers', rover);
-        addEvent(`🔧 ${rover.name} починен`);
+        
+        addEvent(`🔧 ${rover.name} починен и поставлен на зарядку`);
+        
         notifyUpdate();
         return { ok: true };
     }
