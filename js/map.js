@@ -111,6 +111,31 @@ const MapView = (() => {
                 el.style.top = py + 'px';
             }
 
+            if (r.shaking) {
+                r.shaking = false; // Сбрасываем флаг, чтобы анимация была одноразовой
+                
+                // Учитываем, выбран ли ровер сейчас, чтобы не сломать масштабирование (scale)
+                const isSel = (r.id === selectedRoverId);
+                const baseTransform = isSel ? 'translate(-50%, -50%) scale(1.25)' : 'translate(-50%, -50%)';
+                
+                // Запускаем плавную анимацию тряски через Web Animations API
+                el.animate([
+                    { transform: `${baseTransform} rotate(0deg)` },
+                    { transform: `${baseTransform} rotate(-10deg) translateX(-3px)` },
+                    { transform: `${baseTransform} rotate(10deg) translateX(3px)` },
+                    { transform: `${baseTransform} rotate(-10deg) translateX(-3px)` },
+                    { transform: `${baseTransform} rotate(10deg) translateX(3px)` },
+                    { transform: `${baseTransform} rotate(0deg)` }
+                ], {
+                    duration: 500,
+                    easing: 'ease-in-out',
+                    fill: 'forwards'
+                }).onfinish = () => {
+                    // По окончании возвращаем управление инлайн-стилями обратно CSS-классам
+                    el.style.transform = ''; 
+                };
+            }
+
             if (r.id === selectedRoverId) {
                 el.classList.add('selected');
             } else {

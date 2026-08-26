@@ -90,6 +90,10 @@ const Game = (() => {
         const states = await dbGetAll('state');
         state = states[0];
         rovers = await dbGetAll('rovers');
+        
+        // <<< ДОБАВЛЕНО: Очищаем временные визуальные флаги при загрузке
+        rovers.forEach(r => delete r.shaking);
+
         orders = await dbGetAll('orders');
         deliveries = await dbGetAll('deliveries');
 
@@ -255,6 +259,7 @@ const Game = (() => {
                 rover.battery = 0;
                 rover.orderId = null;
                 order.status = ORDER_STATUS.FAILED;
+                rover.shaking = true;
                 await dbPut('rovers', rover);
                 await dbPut('orders', order);
                 await dbDelete('deliveries', d.id);
@@ -265,6 +270,7 @@ const Game = (() => {
 
             if (Math.random() < 0.03) {
                 addEvent(TEXTS.eventDustStorm.replace('{rover}', rover.name));
+                rover.shaking = true;
             } else {
                 d.step++;
             }
@@ -409,21 +415,17 @@ const Game = (() => {
         if (!state.paused && !state.gameOver) {
             if (!lastFrameTime) lastFrameTime = timestamp;
             
-            // Ограничиваем deltaTime, чтобы избежать "спирали смерти" при возврате на вкладку
             const deltaTime = Math.min(timestamp - lastFrameTime, 250);
             lastFrameTime = timestamp;
 
-            // Накапливаем время с учётом множителя скорости
             timeAccumulator += deltaTime * speedMultiplier;
             const tickInterval = GAME_CONFIG.TICK_INTERVAL;
 
-            // Выполняем логику ровно столько раз, сколько "помещается" в накопленное время
             while (timeAccumulator >= tickInterval) {
                 tick();
                 timeAccumulator -= tickInterval;
             }
         } else {
-            // Если пауза, сбрасываем время, чтобы избежать скачка при снятии с паузы
             lastFrameTime = timestamp;
         }
 
@@ -445,10 +447,8 @@ const Game = (() => {
     }
 
     function setSpeed(multiplier) {
-        // Просто меняем множитель. Перезапуск таймера БОЛЬШЕ НЕ НУЖЕН!
         speedMultiplier = Math.max(1, Math.min(3, parseFloat(multiplier)));
         
-        // Мгновенно обновляем CSS-переменную для плавности анимаций
         if (typeof MapView !== 'undefined' && MapView.updateRoverTransitions) {
             MapView.updateRoverTransitions();
         }
