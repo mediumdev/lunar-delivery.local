@@ -6,10 +6,12 @@ const Game = (() => {
     let orders = [];
     let deliveries = [];
     let zones = [];
-    let tickTimer = null;
+    let animationFrameId = null;
+    let lastFrameTime = 0;
+    let timeAccumulator = 0;
     let speedMultiplier = 1;
+    
     const eventLog = [];
-
     const onUpdateCallbacks = [];
 
     function addUpdateCallback(callback) {
@@ -401,14 +403,56 @@ const Game = (() => {
     }
 
     // ---------- Управление скоростью ----------
+    function gameLoop(timestamp) {
+        if (!state) return;
+
+        if (!state.paused && !state.gameOver) {
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            
+            // Ограничиваем deltaTime, чтобы избежать "спирали смерти" при возврате на вкладку
+            const deltaTime = Math.min(timestamp - lastFrameTime, 250);
+            lastFrameTime = timestamp;
+
+            // Накапливаем время с учётом множителя скорости
+            timeAccumulator += deltaTime * speedMultiplier;
+            const tickInterval = GAME_CONFIG.TICK_INTERVAL;
+
+            // Выполняем логику ровно столько раз, сколько "помещается" в накопленное время
+            while (timeAccumulator >= tickInterval) {
+                tick();
+                timeAccumulator -= tickInterval;
+            }
+        } else {
+            // Если пауза, сбрасываем время, чтобы избежать скачка при снятии с паузы
+            lastFrameTime = timestamp;
+        }
+
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function start() {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        lastFrameTime = 0;
+        timeAccumulator = 0;
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function stop() {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+    }
+
     function setSpeed(multiplier) {
-        // Ограничиваем диапазон от 1.0 до 3.0
+        // Просто меняем множитель. Перезапуск таймера БОЛЬШЕ НЕ НУЖЕН!
         speedMultiplier = Math.max(1, Math.min(3, parseFloat(multiplier)));
         
-        // Перезапускаем таймер только если игра уже запущена
-        if (tickTimer) {
-            start();
+        // Мгновенно обновляем CSS-переменную для плавности анимаций
+        if (typeof MapView !== 'undefined' && MapView.updateRoverTransitions) {
+            MapView.updateRoverTransitions();
         }
+        
         notifyUpdate();
         return speedMultiplier;
     }
@@ -447,16 +491,6 @@ const Game = (() => {
         if (typeof UI !== 'undefined' && UI.renderEvents) {
             try { UI.renderEvents(); } catch (e) { /* ignore */ }
         }
-    }
-
-    function start() {
-        stop();
-        const interval = getTickInterval();
-        tickTimer = setInterval(tick, interval);
-    }
-
-    function stop() {
-        if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
     }
 
     function pause() { if (state) state.paused = true; }

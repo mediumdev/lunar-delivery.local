@@ -4,14 +4,12 @@ const MapView = (() => {
     let mapEl = null;
     let overlayEl = null;
 
-    // ---------- Цвет срочности (жёлтый → красный) ----------
     function getUrgencyColor(urgency, maxUrgency) {
         const pct = Math.max(0, Math.min(1, urgency / maxUrgency));
-        const hue = Math.round(pct * 50); // 50 = жёлтый, 0 = красный
+        const hue = Math.round(pct * 50);
         return `hsl(${hue}, 85%, 55%)`;
     }
 
-    // ---------- Проверка доступности заказа для ровера ----------
     function isOrderAvailableForRover(rover, order) {
         if (!rover || rover.status !== ROVER_STATUS.IDLE) return false;
         if (order.weight > rover.capacity) return false;
@@ -88,8 +86,6 @@ const MapView = (() => {
     function renderRovers(rovers, selectedRoverId) {
         if (!overlayEl) return;
 
-        const tickInterval = Game.getTickInterval();
-
         const existingMarkers = new Map();
         overlayEl.querySelectorAll('.rover-marker').forEach(el => {
             existingMarkers.set(parseInt(el.dataset.roverId), el);
@@ -98,7 +94,6 @@ const MapView = (() => {
         for (const r of rovers) {
             const { x, y } = clampPos(r.x, r.y);
             const { px, py } = cellToPixel(x, y);
-
             const activeDelivery = Game.deliveries.find(d => d.roverId === r.id);
 
             let el = existingMarkers.get(r.id);
@@ -107,13 +102,11 @@ const MapView = (() => {
                 el = document.createElement('div');
                 el.className = `rover-marker status-${r.status}`;
                 el.dataset.roverId = r.id;
-                el.style.transitionDuration = `${tickInterval}ms`;
                 el.style.left = px + 'px';
                 el.style.top = py + 'px';
                 overlayEl.appendChild(el);
             } else {
                 el.className = `rover-marker status-${r.status}`;
-                el.style.transitionDuration = `${tickInterval}ms`;
                 el.style.left = px + 'px';
                 el.style.top = py + 'px';
             }
@@ -154,15 +147,12 @@ const MapView = (() => {
     function updateRoverTransitions() {
         if (!overlayEl) return;
         const tickInterval = Game.getTickInterval();
-        overlayEl.querySelectorAll('.rover-marker').forEach(el => {
-            el.style.transitionDuration = `${tickInterval}ms`;
-        });
+        overlayEl.style.setProperty('--rover-transition-duration', `${tickInterval}ms`);
     }
 
     function renderOrders(orders, selectedOrderId) {
         if (!overlayEl) return;
 
-        // Получаем выбранного ровера через глобальную переменную
         const roverForCheck = window._selectedRoverForHighlight || null;
 
         const existingMarkers = new Map();
@@ -193,15 +183,12 @@ const MapView = (() => {
                 el.style.top = py + 'px';
             }
 
-            // Обновляем классы
             el.classList.toggle('selected', o.id === selectedOrderId);
             el.classList.toggle('in-progress', o.status === ORDER_STATUS.IN_PROGRESS);
             
-            // Подсветка доступных для выбранного ровера
             const isAvailable = roverForCheck && isOrderAvailableForRover(roverForCheck, o);
             el.classList.toggle('available', isAvailable && o.id !== selectedOrderId);
 
-            // Цвет фона по срочности (от жёлтого к красному)
             const bgColor = getUrgencyColor(o.urgency, o.maxUrgency);
             el.style.backgroundColor = bgColor;
 

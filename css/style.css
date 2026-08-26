@@ -401,7 +401,7 @@ body {
     pointer-events: auto;
 }
 
-/* ---------- Роверы (transition-duration устанавливается динамически в JS) ---------- */
+/* ---------- Роверы ---------- */
 .rover-marker {
     position: absolute;
     width: 26px;
@@ -419,7 +419,7 @@ body {
     cursor: pointer;
     transition-property: left, top, transform, background, box-shadow;
     transition-timing-function: linear;
-    transition-duration: 1200ms;
+    transition-duration: var(--rover-transition-duration, 1200ms);
     z-index: 5;
     box-shadow: 0 0 8px rgba(124, 196, 255, 0.6);
 }
@@ -533,7 +533,6 @@ body {
     box-shadow: 0 0 6px rgba(255, 209, 102, 0.5);
     line-height: 1;
     animation: orderAppear 0.4s ease-out;
-    /* Плавный переход цвета фона при изменении срочности */
     transition: background-color 0.5s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
 }
 
@@ -547,7 +546,6 @@ body {
     box-shadow: 0 0 16px rgba(255, 209, 102, 1);
 }
 
-/* Заказ в процессе доставки — тусклый с серой рамкой */
 .order-marker.in-progress {
     opacity: 0.45;
     border-color: var(--muted);
@@ -555,10 +553,8 @@ body {
     cursor: not-allowed;
 }
 
-/* Доступный заказ для выбранного ровера — зелёное свечение */
 .order-marker.available {
-    box-shadow: 0 0 14px 3px rgba(107, 211, 107, 0.8),
-        0 0 4px rgba(107, 211, 107, 0.9);
+    box-shadow: 0 0 14px 3px rgba(107, 211, 107, 0.8), 0 0 4px rgba(107, 211, 107, 0.9);
     animation: orderAppear 0.4s ease-out, availablePulse 1.5s infinite;
 }
 
@@ -566,13 +562,11 @@ body {
 
     0%,
     100% {
-        box-shadow: 0 0 10px 2px rgba(107, 211, 107, 0.6),
-            0 0 3px rgba(107, 211, 107, 0.8);
+        box-shadow: 0 0 10px 2px rgba(107, 211, 107, 0.6), 0 0 3px rgba(107, 211, 107, 0.8);
     }
 
     50% {
-        box-shadow: 0 0 18px 4px rgba(107, 211, 107, 1),
-            0 0 6px rgba(107, 211, 107, 1);
+        box-shadow: 0 0 18px 4px rgba(107, 211, 107, 1), 0 0 6px rgba(107, 211, 107, 1);
     }
 }
 
@@ -761,7 +755,6 @@ body {
     box-shadow: 0 0 12px rgba(255, 209, 102, 0.3), inset 0 0 0 1px rgba(255, 209, 102, 0.1);
 }
 
-/* Заказ в процессе доставки — тусклый с серой рамкой */
 .order-card.in-progress {
     opacity: 0.5;
     border-color: var(--muted) !important;
@@ -774,20 +767,17 @@ body {
     border-color: var(--muted) !important;
 }
 
-/* Доступный заказ для выбранного ровера — зелёное свечение */
 .order-card.available {
     border-color: var(--ok) !important;
     border-left-color: var(--ok) !important;
-    box-shadow: 0 0 10px 1px rgba(107, 211, 107, 0.4),
-        inset 0 0 0 1px rgba(107, 211, 107, 0.15);
+    box-shadow: 0 0 10px 1px rgba(107, 211, 107, 0.4), inset 0 0 0 1px rgba(107, 211, 107, 0.15);
     background: linear-gradient(135deg, rgba(107, 211, 107, 0.08), rgba(107, 211, 107, 0.02));
 }
 
 .order-card.available:hover {
     border-color: var(--ok) !important;
     background: linear-gradient(135deg, rgba(107, 211, 107, 0.15), rgba(107, 211, 107, 0.05));
-    box-shadow: 0 0 14px 2px rgba(107, 211, 107, 0.6),
-        inset 0 0 0 1px rgba(107, 211, 107, 0.2);
+    box-shadow: 0 0 14px 2px rgba(107, 211, 107, 0.6), inset 0 0 0 1px rgba(107, 211, 107, 0.2);
 }
 
 .order-header {
@@ -1096,7 +1086,7 @@ body {
     text-align: right;
 }
 
-/* ---------- Ползунок скорости игры (плавный x1.0 — x3.0) ---------- */
+/* ---------- Ползунок скорости игры ---------- */
 .speed-control {
     display: flex;
     align-items: center;

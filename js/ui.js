@@ -3,23 +3,19 @@
 const UI = (() => {
     let selectedOrderId = null;
     let selectedRoverId = null;
-    let speedUpdateTimeout = null; // Для плавного изменения скорости без фризов
 
-    // ---------- Цвет срочности (жёлтый → красный) ----------
     function getUrgencyColor(urgency, maxUrgency) {
         const pct = Math.max(0, Math.min(1, urgency / maxUrgency));
         const hue = Math.round(pct * 50);
         return `hsl(${hue}, 85%, 55%)`;
     }
 
-    // ---------- Цвет рейтинга (зелёный → красный) ----------
     function getReputationColor(reputation, max) {
         const pct = Math.max(0, Math.min(1, reputation / max));
         const hue = Math.round(pct * 120);
         return `hsl(${hue}, 70%, 55%)`;
     }
 
-    // ---------- Проверка доступности заказа для ровера ----------
     function isOrderAvailableForRover(rover, order) {
         if (!rover || rover.status !== ROVER_STATUS.IDLE) return false;
         if (order.weight > rover.capacity) return false;
@@ -69,7 +65,6 @@ const UI = (() => {
         const btnBuyExplorer = document.getElementById('btn-buy-explorer');
         if (btnBuyExplorer) btnBuyExplorer.addEventListener('click', () => onBuy('explorer'));
 
-        // Автоматически обновляем текст кнопок из констант
         updateBuyButtons();
     }
 
@@ -471,30 +466,8 @@ const UI = (() => {
 
     function onSpeedChange(e) {
         const newSpeed = parseFloat(e.target.value);
-        
-        // 1. МГНОВЕННО обновляем визуальную часть (текст и цвет ползунка)
-        // Это даёт ощущение плавного и отзывчивого управления без задержек
-        const valueLabel = document.getElementById('speed-value');
-        if (valueLabel) {
-            valueLabel.textContent = `x${newSpeed.toFixed(1)}`;
-            valueLabel.classList.remove('speed-low', 'speed-med', 'speed-high');
-            if (newSpeed < 1.5) valueLabel.classList.add('speed-low');
-            else if (newSpeed < 2.5) valueLabel.classList.add('speed-med');
-            else valueLabel.classList.add('speed-high');
-        }
-
-        // 2. СБРАСЫВАЕМ предыдущий таймер перезапуска игры
-        if (speedUpdateTimeout) {
-            clearTimeout(speedUpdateTimeout);
-        }
-
-        // 3. Запускаем новый таймер: игра перезапустится с новой скоростью 
-        // только через 100 мс после ПОСЛЕДНЕГО движения ползунка.
-        // Это предотвращает сотни перезапусков в секунду и убирает "фризы".
-        speedUpdateTimeout = setTimeout(() => {
-            Game.setSpeed(newSpeed);
-            MapView.updateRoverTransitions();
-        }, 100);
+        Game.setSpeed(newSpeed);
+        updateSpeedDisplay();
     }
 
     function flashMessage(text) {
