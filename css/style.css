@@ -144,11 +144,19 @@ body {
     align-items: center;
 }
 
-/* ---------- Основной layout ---------- */
+/* ==========================================================================
+   ОСНОВНОЙ LAYOUT (ИЗМЕНЁННЫЙ)
+   ========================================================================== */
 .layout {
     display: grid;
+    /* 3 колонки: Роверы | Карта | Заказы */
     grid-template-columns: 260px 1fr 280px;
-    grid-template-rows: 1fr 180px;
+    /* 2 строки: Основная часть (гибкая) | Нижняя часть (фиксированная) */
+    grid-template-rows: 1fr 220px;
+    /* Явное указание областей сетки */
+    grid-template-areas:
+        "rovers  map     orders"
+        "rovers  delivery events";
     gap: 10px;
     padding: 10px;
     height: calc(100vh - 60px);
@@ -165,7 +173,8 @@ body {
     flex-direction: column;
 }
 
-.panel h2 {
+.panel h2,
+.panel h3 {
     margin: 0 0 10px 0;
     font-size: 14px;
     color: var(--accent);
@@ -175,15 +184,15 @@ body {
     flex-shrink: 0;
 }
 
+/* Левая панель: растягивается на обе строки (до самого низа) */
 .left-panel {
-    grid-column: 1;
-    grid-row: 1;
+    grid-area: rovers;
     overflow: hidden;
 }
 
+/* Центральная панель: Карта */
 .center-panel {
-    grid-column: 2;
-    grid-row: 1;
+    grid-area: map;
     min-height: 0;
     min-width: 0;
     display: flex;
@@ -195,37 +204,33 @@ body {
     overflow: hidden;
 }
 
+/* Правая панель: Заказы */
 .right-panel {
-    grid-column: 3;
-    grid-row: 1;
+    grid-area: orders;
     overflow: hidden;
 }
 
-/* ---------- Объединённая нижняя панель ---------- */
-.bottom-panel {
-    grid-column: 1 / 4;
-    grid-row: 2;
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.bottom-left {
-    padding: 10px 14px;
+/* Новая панель: Доставка (под картой) */
+.delivery-panel {
+    grid-area: delivery;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    overflow: hidden;
+    min-height: 0;
 }
 
-.bottom-right {
-    padding: 10px 14px;
+/* Новая панель: Журнал событий (под заказами) */
+.events-panel {
+    grid-area: events;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    border-left: 1px solid var(--border);
+    min-height: 0;
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 .bottom-title {
@@ -237,19 +242,15 @@ body {
     flex-shrink: 0;
 }
 
-.panel-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-}
-
 /* ---------- Компактная панель доставки ---------- */
 #delivery-info {
     flex: 1;
     overflow-y: auto;
     font-size: 12px;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .delivery-main {
@@ -298,9 +299,10 @@ body {
 
 .btn-deliver {
     width: 100%;
-    padding: 6px;
+    padding: 8px;
     font-size: 13px;
     flex-shrink: 0;
+    margin-top: 8px;
 }
 
 /* ---------- Карта ---------- */

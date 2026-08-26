@@ -43,7 +43,7 @@
 </header>
 
 <main class="layout">
-    <!-- Левая панель: роверы -->
+    <!-- 1. Левая панель: Роверы (занимает всю высоту благодаря grid-area: rovers) -->
     <aside class="panel left-panel">
         <h2 id="rovers-title">🤖 Роверы</h2>
         <div class="panel-content">
@@ -65,12 +65,12 @@
         </div>
     </aside>
 
-    <!-- Центр: только карта -->
-    <section class="center-panel">
+    <!-- 2. Центр: Карта -->
+    <section class="panel center-panel">
         <div class="map-container"></div>
     </section>
 
-    <!-- Правая панель: заказы -->
+    <!-- 3. Правая панель: Заказы -->
     <aside class="panel right-panel">
         <h2 id="orders-title">📦 Заказы</h2>
         <div class="panel-content">
@@ -78,18 +78,20 @@
         </div>
     </aside>
 
-    <!-- Низ: объединённая панель (доставка + журнал) -->
-    <section class="panel bottom-panel">
-        <div class="bottom-left">
-            <h3 class="bottom-title">🚀 Доставка</h3>
-            <div id="delivery-info"><div class="hint">Выберите заказ и ровера</div></div>
-            <button class="btn btn-primary btn-deliver" id="btn-deliver" disabled>🚀 Доставить</button>
+    <!-- 4. Центр низ: Доставка (ровно под картой) -->
+    <section class="panel delivery-panel">
+        <h3 class="bottom-title">🚀 Доставка</h3>
+        <div id="delivery-info" class="panel-content">
+            <div class="hint">Выберите заказ и ровера</div>
         </div>
-        <div class="bottom-right">
-            <h3 class="bottom-title" id="events-title">📡 Журнал событий</h3>
-            <div id="events-list"></div>
-        </div>
+        <button class="btn btn-primary btn-deliver" id="btn-deliver" disabled>🚀 Доставить</button>
     </section>
+
+    <!-- 5. Правый низ: Журнал событий (ровно под заказами) -->
+    <aside class="panel events-panel">
+        <h3 class="bottom-title" id="events-title">📡 Журнал событий</h3>
+        <div id="events-list" class="panel-content"></div>
+    </aside>
 </main>
 
 <div id="flash"></div>
