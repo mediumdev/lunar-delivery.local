@@ -18,9 +18,7 @@ const MapView = (() => {
         try {
             const calc = Game.calculateDeliveryCost(rover, order);
             if (calc.batteryCost > rover.battery) return false;
-        } catch (e) {
-            return false;
-        }
+        } catch (e) { return false; }
         return true;
     }
 
@@ -40,7 +38,6 @@ const MapView = (() => {
 
     function renderZones(zones) {
         if (!mapEl) return;
-
         const savedOverlay = overlayEl;
         mapEl.innerHTML = '';
         mapEl.appendChild(savedOverlay);
@@ -53,16 +50,26 @@ const MapView = (() => {
             cell.dataset.zone = z.type;
 
             if (z.type === 'base') {
-                cell.innerHTML = '<span class="base-icon">⚑</span>';
+                const span = document.createElement('span');
+                span.className = 'base-icon';
+                span.textContent = '⚑';
+                cell.appendChild(span);
                 cell.title = TEXTS.legendBase;
             } else {
                 const seed = (z.x * 31 + z.y * 17) % 100;
+                const span = document.createElement('span');
+                span.className = 'deco';
                 if (z.type === 'craters' && seed < 30) {
-                    cell.innerHTML = '<span class="deco crater-deco"></span>';
+                    span.classList.add('crater-deco');
                 } else if (z.type === 'mountains' && seed < 40) {
-                    cell.innerHTML = '<span class="deco mountain-deco">▲</span>';
+                    span.classList.add('mountain-deco');
+                    span.textContent = '▲';
                 } else if (z.type === 'darkside' && seed < 20) {
-                    cell.innerHTML = '<span class="deco dark-deco">✦</span>';
+                    span.classList.add('dark-deco');
+                    span.textContent = '✦';
+                }
+                if (span.classList.length > 1) {
+                    cell.appendChild(span);
                 }
             }
             mapEl.appendChild(cell);
@@ -85,40 +92,45 @@ const MapView = (() => {
 
     function renderRovers(rovers, selectedRoverId) {
         if (!overlayEl) return;
-
         const existingMarkers = new Map();
         overlayEl.querySelectorAll('.rover-marker').forEach(el => {
             existingMarkers.set(parseInt(el.dataset.roverId), el);
         });
 
+        const tmpl = document.getElementById('tmpl-rover-marker');
         for (const r of rovers) {
             const { x, y } = clampPos(r.x, r.y);
             const { px, py } = cellToPixel(x, y);
             const activeDelivery = Game.deliveries.find(d => d.roverId === r.id);
 
             let el = existingMarkers.get(r.id);
-
             if (!el) {
-                el = document.createElement('div');
-                el.className = `rover-marker status-${r.status}`;
+                el = tmpl.content.cloneNode(true).firstElementChild;
                 el.dataset.roverId = r.id;
                 el.style.left = px + 'px';
                 el.style.top = py + 'px';
                 overlayEl.appendChild(el);
             } else {
-                el.className = `rover-marker status-${r.status}`;
                 el.style.left = px + 'px';
                 el.style.top = py + 'px';
             }
 
+            el.className = `rover-marker status-${r.status}`;
+            if (r.id === selectedRoverId) el.classList.add('selected');
+
+            el.querySelector('.rover-body').textContent = r.name.slice(-2);
+            const badge = el.querySelector('.rover-order-badge');
+            if (activeDelivery) {
+                badge.style.display = 'block';
+                badge.textContent = `#${activeDelivery.orderId}`;
+            } else {
+                badge.style.display = 'none';
+            }
+
             if (r.shaking) {
-                r.shaking = false; // Сбрасываем флаг, чтобы анимация была одноразовой
-                
-                // Учитываем, выбран ли ровер сейчас, чтобы не сломать масштабирование (scale)
+                r.shaking = false;
                 const isSel = (r.id === selectedRoverId);
                 const baseTransform = isSel ? 'translate(-50%, -50%) scale(1.25)' : 'translate(-50%, -50%)';
-                
-                // Запускаем плавную анимацию тряски через Web Animations API
                 el.animate([
                     { transform: `${baseTransform} rotate(0deg)` },
                     { transform: `${baseTransform} rotate(-10deg) translateX(-3px)` },
@@ -126,38 +138,19 @@ const MapView = (() => {
                     { transform: `${baseTransform} rotate(-10deg) translateX(-3px)` },
                     { transform: `${baseTransform} rotate(10deg) translateX(3px)` },
                     { transform: `${baseTransform} rotate(0deg)` }
-                ], {
-                    duration: 500,
-                    easing: 'ease-in-out',
-                    fill: 'forwards'
-                }).onfinish = () => {
-                    // По окончании возвращаем управление инлайн-стилями обратно CSS-классам
-                    el.style.transform = ''; 
-                };
+                ], { duration: 500, easing: 'ease-in-out', fill: 'forwards' })
+                .onfinish = () => { el.style.transform = ''; };
             }
-
-            if (r.id === selectedRoverId) {
-                el.classList.add('selected');
-            } else {
-                el.classList.remove('selected');
-            }
-
-            let inner = `<span class="rover-body">${r.name.slice(-2)}</span>`;
-            if (activeDelivery) {
-                inner += `<span class="rover-order-badge">#${activeDelivery.orderId}</span>`;
-            }
-            el.innerHTML = inner;
 
             let tooltip = `${r.name} (${TEXTS['status_' + r.status]})`;
             if (activeDelivery) {
                 const order = Game.orders.find(o => o.id === activeDelivery.orderId);
                 if (order) {
                     const progress = Math.round((activeDelivery.step / activeDelivery.totalSteps) * 100);
-                    tooltip += `\n📦 Везёт заказ #${order.id} (${progress}%)`;
+                    tooltip += `\n📦 ${TEXTS.deliveringOrder.replace('{id}', order.id).replace('{progress}', progress)}`;
                 }
             }
             el.title = tooltip;
-
             existingMarkers.delete(r.id);
         }
 
@@ -177,31 +170,25 @@ const MapView = (() => {
 
     function renderOrders(orders, selectedOrderId) {
         if (!overlayEl) return;
-
         const roverForCheck = window._selectedRoverForHighlight || null;
-
         const existingMarkers = new Map();
         overlayEl.querySelectorAll('.order-marker').forEach(el => {
-            if (!el.classList.contains('removing')) {
-                existingMarkers.set(parseInt(el.dataset.orderId), el);
-            }
+            if (!el.classList.contains('removing')) existingMarkers.set(parseInt(el.dataset.orderId), el);
         });
 
+        const tmpl = document.getElementById('tmpl-order-marker');
         for (const o of orders) {
-            if (o.status !== ORDER_STATUS.PENDING) continue;
-            if (!o.destination) continue;
+            if (o.status !== ORDER_STATUS.PENDING || !o.destination) continue;
 
             const { x, y } = clampPos(o.destination.x, o.destination.y);
             const { px, py } = cellToPixel(x, y);
 
             let el = existingMarkers.get(o.id);
-
             if (!el) {
-                el = document.createElement('div');
-                el.className = 'order-marker';
+                el = tmpl.content.cloneNode(true).firstElementChild;
+                el.dataset.orderId = o.id;
                 el.style.left = px + 'px';
                 el.style.top = py + 'px';
-                el.dataset.orderId = o.id;
                 overlayEl.appendChild(el);
             } else {
                 el.style.left = px + 'px';
@@ -210,23 +197,22 @@ const MapView = (() => {
 
             el.classList.toggle('selected', o.id === selectedOrderId);
             el.classList.toggle('in-progress', o.status === ORDER_STATUS.IN_PROGRESS);
-            
-            const isAvailable = roverForCheck && isOrderAvailableForRover(roverForCheck, o);
-            el.classList.toggle('available', isAvailable && o.id !== selectedOrderId);
+            el.classList.toggle('available', roverForCheck && isOrderAvailableForRover(roverForCheck, o) && o.id !== selectedOrderId);
 
-            const bgColor = getUrgencyColor(o.urgency, o.maxUrgency);
-            el.style.backgroundColor = bgColor;
-
+            el.style.backgroundColor = getUrgencyColor(o.urgency, o.maxUrgency);
             const urgencyPct = Math.round((o.urgency / o.maxUrgency) * 100);
-            let urgencyClass = 'urgency-ok';
-            if (urgencyPct < 50) urgencyClass = 'urgency-warn';
-            if (urgencyPct < 25) urgencyClass = 'urgency-crit';
+            let urgencyClass = urgencyPct < 25 ? 'urgency-crit' : (urgencyPct < 50 ? 'urgency-warn' : 'urgency-ok');
 
-            el.innerHTML = `
-                <span class="order-id">#${o.id}</span>
-                <span class="order-urgency ${urgencyClass}">${o.urgency}</span>
-            `;
-            el.title = `Заказ #${o.id}: ${o.weight}${TEXTS.kg}, ${o.reward}💰, риск ${o.risk}%`;
+            el.querySelector('.order-id').textContent = `#${o.id}`;
+            const urgEl = el.querySelector('.order-urgency');
+            urgEl.className = `order-urgency ${urgencyClass}`;
+            urgEl.textContent = o.urgency;
+
+            el.title = TEXTS.orderTitleTemplate
+                .replace('{id}', o.id)
+                .replace('{weight}', o.weight)
+                .replace('{reward}', o.reward)
+                .replace('{risk}', o.risk);
 
             existingMarkers.delete(o.id);
         }
@@ -255,7 +241,6 @@ const MapView = (() => {
 
     return { 
         init, renderZones, renderRovers, renderOrders, renderPath, 
-        cellToPixel, updateRoverTransitions, 
-        getUrgencyColor, isOrderAvailableForRover
+        cellToPixel, updateRoverTransitions, getUrgencyColor, isOrderAvailableForRover
     };
 })();

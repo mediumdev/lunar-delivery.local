@@ -1,5 +1,8 @@
 /* style.css */
 
+/* ==========================================================================
+   1. ПЕРЕМЕННЫЕ И БАЗОВЫЕ НАСТРОЙКИ
+   ========================================================================== */
 :root {
     --bg: #0b0d12;
     --bg-2: #141821;
@@ -30,7 +33,9 @@ body {
     overflow: hidden;
 }
 
-/* ---------- Универсальные скроллы (тёмные, узкие, не перекрывают контент) ---------- */
+/* ==========================================================================
+   2. СКРОЛЛБАРЫ (Тёмные, узкие, не перекрывают контент)
+   ========================================================================== */
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -63,14 +68,107 @@ body {
     background: transparent;
 }
 
-/* Уменьшаем скролл у внутренних панелей */
+/* Уменьшенный скролл для внутренних панелей */
 .panel-content::-webkit-scrollbar,
 #events-list::-webkit-scrollbar,
 #delivery-info::-webkit-scrollbar {
     width: 6px;
 }
 
-/* ---------- Шапка ---------- */
+/* ==========================================================================
+   3. ОСНОВНОЙ LAYOUT (Сетка)
+   ========================================================================== */
+.layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    grid-template-rows: 1fr 220px;
+    grid-template-areas:
+        "rovers  map     orders"
+        "rovers  delivery events";
+    gap: 10px;
+    padding: 10px;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+.panel {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel h2,
+.panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+/* Области сетки */
+.left-panel {
+    grid-area: rovers;
+    overflow: hidden;
+}
+
+.center-panel {
+    grid-area: map;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+.right-panel {
+    grid-area: orders;
+    overflow: hidden;
+}
+
+.delivery-panel {
+    grid-area: delivery;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.events-panel {
+    grid-area: events;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.bottom-title {
+    margin: 0 0 6px 0;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   4. ВЕРХНЯЯ ПАНЕЛЬ (Шапка)
+   ========================================================================== */
 .topbar {
     display: flex;
     align-items: center;
@@ -145,167 +243,8 @@ body {
 }
 
 /* ==========================================================================
-   ОСНОВНОЙ LAYOUT (ИЗМЕНЁННЫЙ)
+   5. КАРТА И ЗОНЫ
    ========================================================================== */
-.layout {
-    display: grid;
-    /* 3 колонки: Роверы | Карта | Заказы */
-    grid-template-columns: 260px 1fr 280px;
-    /* 2 строки: Основная часть (гибкая) | Нижняя часть (фиксированная) */
-    grid-template-rows: 1fr 220px;
-    /* Явное указание областей сетки */
-    grid-template-areas:
-        "rovers  map     orders"
-        "rovers  delivery events";
-    gap: 10px;
-    padding: 10px;
-    height: calc(100vh - 60px);
-    overflow: hidden;
-}
-
-.panel {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.panel h2,
-.panel h3 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
-    flex-shrink: 0;
-}
-
-/* Левая панель: растягивается на обе строки (до самого низа) */
-.left-panel {
-    grid-area: rovers;
-    overflow: hidden;
-}
-
-/* Центральная панель: Карта */
-.center-panel {
-    grid-area: map;
-    min-height: 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    overflow: hidden;
-}
-
-/* Правая панель: Заказы */
-.right-panel {
-    grid-area: orders;
-    overflow: hidden;
-}
-
-/* Новая панель: Доставка (под картой) */
-.delivery-panel {
-    grid-area: delivery;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-/* Новая панель: Журнал событий (под заказами) */
-.events-panel {
-    grid-area: events;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.panel-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-}
-
-.bottom-title {
-    margin: 0 0 6px 0;
-    font-size: 12px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    flex-shrink: 0;
-}
-
-/* ---------- Компактная панель доставки ---------- */
-#delivery-info {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 12px;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.delivery-main {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.delivery-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px 12px;
-}
-
-.delivery-row {
-    font-size: 12px;
-    margin-bottom: 2px;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.delivery-row b {
-    color: var(--accent);
-}
-
-.delivery-grid .delivery-row {
-    font-size: 11px;
-    margin-bottom: 0;
-}
-
-.delivery-error {
-    color: var(--danger);
-    font-size: 11px;
-    margin-top: 4px;
-    padding: 3px 6px;
-    background: rgba(255, 107, 107, 0.1);
-    border-radius: 3px;
-}
-
-.hint {
-    color: var(--muted);
-    font-size: 11px;
-    font-style: italic;
-}
-
-.btn-deliver {
-    width: 100%;
-    padding: 8px;
-    font-size: 13px;
-    flex-shrink: 0;
-    margin-top: 8px;
-}
-
-/* ---------- Карта ---------- */
 .map-container {
     position: relative;
     display: flex;
@@ -340,6 +279,7 @@ body {
     color: rgba(255, 255, 255, 0.3);
 }
 
+/* Типы зон */
 .zone-base {
     background: #3a4150;
 }
@@ -403,7 +343,10 @@ body {
     pointer-events: auto;
 }
 
-/* ---------- Роверы ---------- */
+/* ==========================================================================
+   6. МАРКЕРЫ (Роверы и Заказы на карте)
+   ========================================================================== */
+/* --- Роверы --- */
 .rover-marker {
     position: absolute;
     width: 26px;
@@ -419,11 +362,11 @@ body {
     font-weight: bold;
     color: #000;
     cursor: pointer;
+    z-index: 5;
+    box-shadow: 0 0 8px rgba(124, 196, 255, 0.6);
     transition-property: left, top, transform, background, box-shadow;
     transition-timing-function: linear;
     transition-duration: var(--rover-transition-duration, 1200ms);
-    z-index: 5;
-    box-shadow: 0 0 8px rgba(124, 196, 255, 0.6);
 }
 
 .rover-marker.selected {
@@ -447,32 +390,6 @@ body {
     box-shadow: 0 0 12px rgba(107, 211, 107, 0.8);
 }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 8px rgba(255, 169, 77, 0.6);
-    }
-
-    50% {
-        box-shadow: 0 0 20px rgba(255, 169, 77, 1);
-    }
-}
-
-@keyframes brokenPulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    50% {
-        box-shadow: 0 0 20px rgba(255, 107, 107, 1);
-        transform: translate(-50%, -50%) scale(1.15);
-    }
-}
-
 .rover-marker.status-broken::after {
     content: '⚠';
     position: absolute;
@@ -490,31 +407,7 @@ body {
     border: 1px solid #fff;
 }
 
-/* ---------- Заказы (маркеры на карте) ---------- */
-@keyframes orderAppear {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3);
-    }
-
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-@keyframes orderDisappear {
-    from {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    to {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3);
-    }
-}
-
+/* --- Заказы --- */
 .order-marker {
     position: absolute;
     width: 28px;
@@ -560,18 +453,6 @@ body {
     animation: orderAppear 0.4s ease-out, availablePulse 1.5s infinite;
 }
 
-@keyframes availablePulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 10px 2px rgba(107, 211, 107, 0.6), 0 0 3px rgba(107, 211, 107, 0.8);
-    }
-
-    50% {
-        box-shadow: 0 0 18px 4px rgba(107, 211, 107, 1), 0 0 6px rgba(107, 211, 107, 1);
-    }
-}
-
 .order-id {
     font-size: 10px;
 }
@@ -597,24 +478,7 @@ body {
     animation: blink 0.8s infinite;
 }
 
-@keyframes blink {
-    50% {
-        opacity: 0.3;
-    }
-}
-
-@keyframes pathFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0);
-    }
-
-    to {
-        opacity: 0.5;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
+/* --- Путь следования --- */
 .path-dot {
     position: absolute;
     width: 6px;
@@ -627,7 +491,10 @@ body {
     animation: pathFadeIn 0.3s ease-out;
 }
 
-/* ---------- Карточки роверов ---------- */
+/* ==========================================================================
+   7. КАРТОЧКИ (Роверы и Заказы в боковых панелях)
+   ========================================================================== */
+/* --- Карточки роверов --- */
 .rover-card {
     background: var(--bg-3);
     border: 1px solid var(--border);
@@ -649,6 +516,15 @@ body {
     padding: 7px;
     background: linear-gradient(135deg, rgba(255, 209, 102, 0.12), rgba(255, 209, 102, 0.03));
     box-shadow: 0 0 12px rgba(255, 209, 102, 0.25), inset 0 0 0 1px rgba(255, 209, 102, 0.1);
+}
+
+.rover-card.busy {
+    border-left: 3px solid var(--ok);
+    background: linear-gradient(90deg, rgba(107, 211, 107, 0.08), var(--bg-3) 30%);
+}
+
+.rover-card.busy.selected {
+    background: linear-gradient(90deg, rgba(107, 211, 107, 0.15), rgba(255, 209, 102, 0.08) 40%);
 }
 
 .rover-header {
@@ -704,7 +580,9 @@ body {
     margin-bottom: 4px;
 }
 
-.stat-val {
+.stat-val,
+.stat-val-battery,
+.stat-val-capacity {
     margin-left: auto;
     color: var(--muted);
 }
@@ -732,7 +610,7 @@ body {
     margin-top: 6px;
 }
 
-/* ---------- Карточки заказов ---------- */
+/* --- Карточки заказов --- */
 .order-card {
     background: var(--bg-3);
     border: 1px solid var(--border);
@@ -811,7 +689,200 @@ body {
     align-items: center;
 }
 
-/* ---------- Кнопки ---------- */
+/* ==========================================================================
+   8. ПАНЕЛЬ ДОСТАВКИ И АКТИВНЫЕ ЗАДАЧИ
+   ========================================================================== */
+#delivery-info {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 12px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.delivery-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.delivery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 12px;
+}
+
+.delivery-row {
+    font-size: 12px;
+    margin-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.delivery-row b {
+    color: var(--accent);
+}
+
+.delivery-grid .delivery-row {
+    font-size: 11px;
+    margin-bottom: 0;
+}
+
+.delivery-error {
+    color: var(--danger);
+    font-size: 11px;
+    margin-top: 4px;
+    padding: 3px 6px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 3px;
+}
+
+.hint {
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+}
+
+.btn-deliver {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 8px;
+}
+
+/* Индикаторы внутри карточек роверов */
+.rover-delivery-info {
+    background: rgba(107, 211, 107, 0.1);
+    border: 1px solid rgba(107, 211, 107, 0.3);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.delivery-badge {
+    font-size: 11px;
+    color: var(--ok);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.delivery-progress {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ok), var(--accent));
+    transition: width 0.4s ease;
+}
+
+.progress-text {
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 30px;
+    text-align: right;
+}
+
+.rover-order-badge {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    background: var(--accent-2);
+    color: #000;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 8px;
+    border: 1px solid #000;
+    line-height: 1.2;
+    box-shadow: 0 0 4px rgba(255, 209, 102, 0.8);
+    white-space: nowrap;
+    z-index: 6;
+}
+
+/* Список активных доставок */
+.active-deliveries {
+    background: rgba(107, 211, 107, 0.05);
+    border: 1px solid rgba(107, 211, 107, 0.2);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+}
+
+.active-title {
+    font-size: 11px;
+    color: var(--ok);
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.active-delivery-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 2px 0;
+    border-bottom: 1px dotted var(--border);
+}
+
+.active-delivery-item:last-child {
+    border-bottom: none;
+}
+
+.active-rover {
+    color: var(--accent);
+    font-weight: bold;
+    min-width: 35px;
+}
+
+.active-arrow {
+    color: var(--muted);
+}
+
+.active-order {
+    color: var(--accent-2);
+    font-weight: bold;
+    min-width: 25px;
+}
+
+.active-progress {
+    flex: 1;
+    height: 4px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.active-percent {
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 30px;
+    text-align: right;
+}
+
+/* ==========================================================================
+   9. КНОПКИ И ЭЛЕМЕНТЫ УПРАВЛЕНИЯ
+   ========================================================================== */
 .btn {
     background: var(--bg-3);
     color: var(--fg);
@@ -879,216 +950,7 @@ body {
     flex-wrap: wrap;
 }
 
-/* ---------- Журнал событий ---------- */
-@keyframes eventAppear {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.event-item {
-    font-size: 11px;
-    padding: 2px 0;
-    border-bottom: 1px dotted var(--border);
-    color: var(--fg);
-    animation: eventAppear 0.3s ease-out;
-}
-
-.event-tick {
-    color: var(--muted);
-    font-family: monospace;
-    margin-right: 6px;
-}
-
-#events-list {
-    overflow-y: auto;
-    flex: 1;
-    min-height: 0;
-}
-
-/* ---------- Легенда ---------- */
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    margin-bottom: 4px;
-}
-
-.legend-swatch {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-}
-
-.legend-item.zone-plains .legend-swatch {
-    background: #2a2f3a;
-}
-
-.legend-item.zone-craters .legend-swatch {
-    background: #1f2430;
-}
-
-.legend-item.zone-mountains .legend-swatch {
-    background: #171b24;
-}
-
-.legend-item.zone-darkside .legend-swatch {
-    background: #0a0c12;
-}
-
-.legend-label {
-    flex: 1;
-}
-
-.legend-stats {
-    color: var(--muted);
-    font-size: 10px;
-}
-
-/* ---------- Индикатор занятости ровера ---------- */
-.rover-card.busy {
-    border-left: 3px solid var(--ok);
-    background: linear-gradient(90deg, rgba(107, 211, 107, 0.08), var(--bg-3) 30%);
-}
-
-.rover-card.busy.selected {
-    background: linear-gradient(90deg, rgba(107, 211, 107, 0.15), rgba(255, 209, 102, 0.08) 40%);
-}
-
-.rover-delivery-info {
-    background: rgba(107, 211, 107, 0.1);
-    border: 1px solid rgba(107, 211, 107, 0.3);
-    border-radius: 4px;
-    padding: 4px 6px;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.delivery-badge {
-    font-size: 11px;
-    color: var(--ok);
-    font-weight: bold;
-    white-space: nowrap;
-}
-
-.delivery-progress {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.progress-bar {
-    flex: 1;
-    height: 5px;
-    background: var(--bg);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--ok), var(--accent));
-    transition: width 0.4s ease;
-}
-
-.progress-text {
-    font-size: 10px;
-    color: var(--muted);
-    min-width: 30px;
-    text-align: right;
-}
-
-.rover-order-badge {
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    background: var(--accent-2);
-    color: #000;
-    font-size: 9px;
-    font-weight: bold;
-    padding: 1px 4px;
-    border-radius: 8px;
-    border: 1px solid #000;
-    line-height: 1.2;
-    box-shadow: 0 0 4px rgba(255, 209, 102, 0.8);
-    white-space: nowrap;
-    z-index: 6;
-}
-
-/* ---------- Список активных доставок ---------- */
-.active-deliveries {
-    background: rgba(107, 211, 107, 0.05);
-    border: 1px solid rgba(107, 211, 107, 0.2);
-    border-radius: 4px;
-    padding: 6px 8px;
-    margin-bottom: 8px;
-}
-
-.active-title {
-    font-size: 11px;
-    color: var(--ok);
-    font-weight: bold;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.active-delivery-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    padding: 2px 0;
-    border-bottom: 1px dotted var(--border);
-}
-
-.active-delivery-item:last-child {
-    border-bottom: none;
-}
-
-.active-rover {
-    color: var(--accent);
-    font-weight: bold;
-    min-width: 35px;
-}
-
-.active-arrow {
-    color: var(--muted);
-}
-
-.active-order {
-    color: var(--accent-2);
-    font-weight: bold;
-    min-width: 25px;
-}
-
-.active-progress {
-    flex: 1;
-    height: 4px;
-    background: var(--bg);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.active-percent {
-    font-size: 10px;
-    color: var(--muted);
-    min-width: 30px;
-    text-align: right;
-}
-
-/* ---------- Ползунок скорости игры ---------- */
+/* Ползунок скорости */
 .speed-control {
     display: flex;
     align-items: center;
@@ -1173,7 +1035,75 @@ body {
     color: var(--warn);
 }
 
-/* ---------- Всплывашка ---------- */
+/* ==========================================================================
+   10. ЖУРНАЛ СОБЫТИЙ И ЛЕГЕНДА
+   ========================================================================== */
+/* Журнал */
+.event-item {
+    font-size: 11px;
+    padding: 2px 0;
+    border-bottom: 1px dotted var(--border);
+    color: var(--fg);
+    animation: eventAppear 0.3s ease-out;
+}
+
+.event-tick {
+    color: var(--muted);
+    font-family: monospace;
+    margin-right: 6px;
+}
+
+#events-list {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Легенда карты */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.legend-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+}
+
+.legend-item.zone-plains .legend-swatch {
+    background: #2a2f3a;
+}
+
+.legend-item.zone-craters .legend-swatch {
+    background: #1f2430;
+}
+
+.legend-item.zone-mountains .legend-swatch {
+    background: #171b24;
+}
+
+.legend-item.zone-darkside .legend-swatch {
+    background: #0a0c12;
+}
+
+.legend-label {
+    flex: 1;
+}
+
+.legend-stats {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+/* ==========================================================================
+   11. МОДАЛЬНЫЕ ОКНА И УВЕДОМЛЕНИЯ
+   ========================================================================== */
+/* Всплывающее уведомление (Flash) */
 #flash {
     position: fixed;
     top: 70px;
@@ -1195,7 +1125,7 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* ---------- Модалка Game Over ---------- */
+/* Модалка Game Over */
 .modal {
     position: fixed;
     inset: 0;
@@ -1220,18 +1150,6 @@ body {
     animation: modalAppear 0.4s ease-out;
 }
 
-@keyframes modalAppear {
-    from {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
 .modal-content h2 {
     color: var(--danger);
     margin-top: 0;
@@ -1243,4 +1161,111 @@ body {
     font-size: 12px;
     text-align: center;
     padding: 10px;
+}
+
+/* ==========================================================================
+   12. АНИМАЦИИ (Keyframes)
+   ========================================================================== */
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(255, 169, 77, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 169, 77, 1);
+    }
+}
+
+@keyframes brokenPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 107, 107, 1);
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+}
+
+@keyframes orderAppear {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes orderDisappear {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+}
+
+@keyframes availablePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px 2px rgba(107, 211, 107, 0.6), 0 0 3px rgba(107, 211, 107, 0.8);
+    }
+
+    50% {
+        box-shadow: 0 0 18px 4px rgba(107, 211, 107, 1), 0 0 6px rgba(107, 211, 107, 1);
+    }
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes pathFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    to {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes eventAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes modalAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

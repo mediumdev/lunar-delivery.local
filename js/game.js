@@ -29,28 +29,18 @@ const Game = (() => {
 
     function notifyUpdate() {
         onUpdateCallbacks.forEach(callback => {
-            try {
-                callback();
-            } catch (e) {
-                console.error('Error in update callback:', e);
-            }
+            try { callback(); } catch (e) { console.error('Error in update callback:', e); }
         });
     }
 
-    // ---------- Инициализация ----------
     async function newGame() {
         await dbClearAll();
         zones = generateMapZones(GAME_CONFIG.MAP_SIZE, GAME_CONFIG.BASE_POSITION);
         await dbPut('zones', { id: 1, data: zones });
 
         state = {
-            id: 1,
-            money: GAME_CONFIG.INITIAL_MONEY,
-            reputation: GAME_CONFIG.INITIAL_REPUTATION,
-            sol: 1,
-            tick: 0,
-            paused: false,
-            gameOver: false,
+            id: 1, money: GAME_CONFIG.INITIAL_MONEY, reputation: GAME_CONFIG.INITIAL_REPUTATION,
+            sol: 1, tick: 0, paused: false, gameOver: false,
         };
         await dbPut('state', state);
 
@@ -58,16 +48,9 @@ const Game = (() => {
         for (const cfg of INITIAL_ROVERS) {
             const type = ROVER_TYPES[cfg.type];
             const rover = {
-                type: cfg.type,
-                name: cfg.name,
-                x: GAME_CONFIG.BASE_POSITION.x,
-                y: GAME_CONFIG.BASE_POSITION.y,
-                battery: type.maxBattery,
-                capacity: type.capacity,
-                maxBattery: type.maxBattery,
-                speed: type.speed,
-                status: ROVER_STATUS.IDLE,
-                orderId: null,
+                type: cfg.type, name: cfg.name, x: GAME_CONFIG.BASE_POSITION.x, y: GAME_CONFIG.BASE_POSITION.y,
+                battery: type.maxBattery, capacity: type.capacity, maxBattery: type.maxBattery,
+                speed: type.speed, status: ROVER_STATUS.IDLE, orderId: null,
             };
             const id = await dbAdd('rovers', rover);
             rover.id = id;
@@ -90,10 +73,7 @@ const Game = (() => {
         const states = await dbGetAll('state');
         state = states[0];
         rovers = await dbGetAll('rovers');
-        
-        // <<< ДОБАВЛЕНО: Очищаем временные визуальные флаги при загрузке
         rovers.forEach(r => delete r.shaking);
-
         orders = await dbGetAll('orders');
         deliveries = await dbGetAll('deliveries');
 
@@ -105,28 +85,20 @@ const Game = (() => {
             await dbPut('zones', { id: 1, data: zones });
         }
 
-        if (!state) {
-            return await newGame();
-        }
-
-        if (state.gameOver || state.reputation <= GAME_CONFIG.GAME_OVER_REPUTATION) {
+        if (!state || state.gameOver || state.reputation <= GAME_CONFIG.GAME_OVER_REPUTATION) {
             return await newGame();
         }
 
         return { state, rovers, orders, zones };
     }
 
-    // ---------- Генерация заказов ----------
     async function spawnOrder() {
         if (!state) return;
         if (orders.filter(o => o.status === ORDER_STATUS.PENDING).length >= GAME_CONFIG.MAX_ACTIVE_ORDERS) return;
 
         let pos;
         do {
-            pos = {
-                x: Math.floor(Math.random() * GAME_CONFIG.MAP_SIZE),
-                y: Math.floor(Math.random() * GAME_CONFIG.MAP_SIZE),
-            };
+            pos = { x: Math.floor(Math.random() * GAME_CONFIG.MAP_SIZE), y: Math.floor(Math.random() * GAME_CONFIG.MAP_SIZE) };
         } while (pos.x === GAME_CONFIG.BASE_POSITION.x && pos.y === GAME_CONFIG.BASE_POSITION.y);
 
         const zone = getZoneAt(pos.x, pos.y);
@@ -139,32 +111,19 @@ const Game = (() => {
         const urgency = 25 + Math.floor(Math.random() * 30) + Math.round(distance * 1.5);
 
         const order = {
-            weight,
-            reward,
-            urgency,
-            maxUrgency: urgency,
-            risk: Math.round(zoneData.risk * 100),
-            destination: { x: pos.x, y: pos.y },
-            zone: zone.type,
-            status: ORDER_STATUS.PENDING,
-            roverId: null,
-            createdAt: state.tick,
+            weight, reward, urgency, maxUrgency: urgency, risk: Math.round(zoneData.risk * 100),
+            destination: { x: pos.x, y: pos.y }, zone: zone.type, status: ORDER_STATUS.PENDING, roverId: null, createdAt: state.tick,
         };
 
         const id = await dbAdd('orders', order);
         order.id = id;
         orders.push(order);
 
-        addEvent(TEXTS.eventOrderSpawn
-            .replace('{id}', id)
-            .replace('{weight}', weight)
-            .replace('{reward}', reward));
-        
+        addEvent(TEXTS.eventOrderSpawn.replace('{id}', id).replace('{weight}', weight).replace('{reward}', reward));
         notifyUpdate();
         return order;
     }
 
-    // ---------- Расчёт стоимости доставки ----------
     function calculateDeliveryCost(rover, order) {
         const distance = manhattan(rover, order.destination);
         const path = buildPath(rover, order.destination);
@@ -174,7 +133,6 @@ const Game = (() => {
             totalRisk += ZONE_TYPES[z.type].risk;
         }
         const avgRisk = path.length ? totalRisk / path.length : 0;
-
         const weightPenalty = 1 + (order.weight / rover.capacity);
         const batteryCost = Math.ceil(distance * weightPenalty * (1 + avgRisk * 2));
 
@@ -195,18 +153,17 @@ const Game = (() => {
         if (order.weight > rover.capacity) return { ok: false, reason: TEXTS.notEnoughCapacity };
         
         const activeDelivery = deliveries.find(d => d.orderId === order.id);
-        if (activeDelivery) return { ok: false, reason: 'Заказ уже в доставке' };
+        if (activeDelivery) return { ok: false, reason: TEXTS.orderAlreadyDelivering };
         
         const calc = calculateDeliveryCost(rover, order);
         if (calc.batteryCost > rover.battery) return { ok: false, reason: TEXTS.notEnoughBattery };
         return { ok: true, calc };
     }
 
-    // ---------- Запуск доставки ----------
     async function startDelivery(roverId, orderId) {
         const rover = rovers.find(r => r.id === roverId);
         const order = orders.find(o => o.id === orderId);
-        if (!rover || !order) return { ok: false, reason: 'Не найдено' };
+        if (!rover || !order) return { ok: false, reason: TEXTS.notFound };
         const check = canDeliver(rover, order);
         if (!check.ok) return check;
 
@@ -218,28 +175,20 @@ const Game = (() => {
         const fullPath = [...pathToOrder, ...pathToBase.slice(1)];
         
         const delivery = {
-            roverId: rover.id,
-            orderId: order.id,
-            path: fullPath,
-            step: 0,
-            orderStepIndex: pathToOrder.length - 1,
-            batteryCost: check.calc.batteryCost,
-            totalSteps: fullPath.length,
-            startedAt: state.tick,
+            roverId: rover.id, orderId: order.id, path: fullPath, step: 0,
+            orderStepIndex: pathToOrder.length - 1, batteryCost: check.calc.batteryCost,
+            totalSteps: fullPath.length, startedAt: state.tick,
         };
         const id = await dbAdd('deliveries', delivery);
         delivery.id = id;
         deliveries.push(delivery);
 
         await dbPut('rovers', rover);
-
-        addEvent(`🚀 ${rover.name} → Заказ #${order.id} (${TEXTS.distance}: ${check.calc.distance} ${TEXTS.cells})`);
-        
+        addEvent(TEXTS.eventDeliveryStarted.replace('{rover}', rover.name).replace('{id}', order.id).replace('{distance}', check.calc.distance));
         notifyUpdate();
         return { ok: true };
     }
 
-    // ---------- Тик игры ----------
     async function tick() {
         if (!state || state.paused || state.gameOver) return;
         state.tick++;
@@ -286,7 +235,7 @@ const Game = (() => {
             if (d.step === d.orderStepIndex && order.status === ORDER_STATUS.PENDING) {
                 order.status = ORDER_STATUS.IN_PROGRESS;
                 await dbPut('orders', order);
-                addEvent(`📦 ${rover.name} забрал заказ #${order.id}`);
+                addEvent(TEXTS.eventRoverPickedUp.replace('{rover}', rover.name).replace('{id}', order.id));
             }
 
             if (Math.random() < 0.02) {
@@ -347,21 +296,18 @@ const Game = (() => {
             state.gameOver = true;
             await dbPut('state', state);
             stop();
-            if (typeof UI !== 'undefined' && UI.showGameOver) {
-                UI.showGameOver();
-            }
+            if (typeof UI !== 'undefined' && UI.showGameOver) UI.showGameOver();
         }
 
         notifyUpdate();
     }
 
-    // ---------- Действия игрока ----------
     async function chargeRover(roverId) {
         const rover = rovers.find(r => r.id === roverId);
         if (!rover || rover.status !== ROVER_STATUS.IDLE) return false;
         rover.status = ROVER_STATUS.CHARGING;
         await dbPut('rovers', rover);
-        addEvent(`⚡ ${rover.name} на зарядке`);
+        addEvent(TEXTS.eventRoverCharging.replace('{rover}', rover.name));
         notifyUpdate();
         return true;
     }
@@ -372,18 +318,14 @@ const Game = (() => {
         if (state.money < GAME_CONFIG.REPAIR_COST) return { ok: false, reason: TEXTS.cannotAfford };
         
         state.money -= GAME_CONFIG.REPAIR_COST;
-        
         rover.status = ROVER_STATUS.CHARGING; 
-        
         rover.battery = Math.floor(rover.maxBattery / 2);
         rover.x = GAME_CONFIG.BASE_POSITION.x;
         rover.y = GAME_CONFIG.BASE_POSITION.y;
         
         await dbPut('state', state);
         await dbPut('rovers', rover);
-        
-        addEvent(`🔧 ${rover.name} починен и поставлен на зарядку`);
-        
+        addEvent(TEXTS.eventRoverRepaired.replace('{rover}', rover.name));
         notifyUpdate();
         return { ok: true };
     }
@@ -392,19 +334,14 @@ const Game = (() => {
         const cfg = ROVER_TYPES[type];
         if (!cfg) return { ok: false };
         if (state.money < cfg.cost) return { ok: false, reason: TEXTS.cannotAfford };
-        if (rovers.length >= GAME_CONFIG.MAX_ROVERS) return { ok: false, reason: 'Нет места в ангаре' };
+        if (rovers.length >= GAME_CONFIG.MAX_ROVERS) return { ok: false, reason: TEXTS.hangarFull };
+        
         state.money -= cfg.cost;
         const rover = {
-            type,
-            name: 'R-' + String(rovers.length + 1).padStart(2, '0'),
-            x: GAME_CONFIG.BASE_POSITION.x,
-            y: GAME_CONFIG.BASE_POSITION.y,
-            battery: cfg.maxBattery,
-            capacity: cfg.capacity,
-            maxBattery: cfg.maxBattery,
-            speed: cfg.speed,
-            status: ROVER_STATUS.IDLE,
-            orderId: null,
+            type, name: 'R-' + String(rovers.length + 1).padStart(2, '0'),
+            x: GAME_CONFIG.BASE_POSITION.x, y: GAME_CONFIG.BASE_POSITION.y,
+            battery: cfg.maxBattery, capacity: cfg.capacity, maxBattery: cfg.maxBattery,
+            speed: cfg.speed, status: ROVER_STATUS.IDLE, orderId: null,
         };
         const id = await dbAdd('rovers', rover);
         rover.id = id;
@@ -414,19 +351,14 @@ const Game = (() => {
         return { ok: true, rover };
     }
 
-    // ---------- Управление скоростью ----------
     function gameLoop(timestamp) {
         if (!state) return;
-
         if (!state.paused && !state.gameOver) {
             if (!lastFrameTime) lastFrameTime = timestamp;
-            
             const deltaTime = Math.min(timestamp - lastFrameTime, 250);
             lastFrameTime = timestamp;
-
             timeAccumulator += deltaTime * speedMultiplier;
             const tickInterval = GAME_CONFIG.TICK_INTERVAL;
-
             while (timeAccumulator >= tickInterval) {
                 tick();
                 timeAccumulator -= tickInterval;
@@ -434,7 +366,6 @@ const Game = (() => {
         } else {
             lastFrameTime = timestamp;
         }
-
         animationFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -454,32 +385,16 @@ const Game = (() => {
 
     function setSpeed(multiplier) {
         speedMultiplier = Math.max(1, Math.min(3, parseFloat(multiplier)));
-        
-        if (typeof MapView !== 'undefined' && MapView.updateRoverTransitions) {
-            MapView.updateRoverTransitions();
-        }
-        
+        if (typeof MapView !== 'undefined' && MapView.updateRoverTransitions) MapView.updateRoverTransitions();
         notifyUpdate();
         return speedMultiplier;
     }
 
-    function getSpeed() {
-        return speedMultiplier;
-    }
-
-    function getTickInterval() {
-        return Math.max(50, Math.round(GAME_CONFIG.TICK_INTERVAL / speedMultiplier));
-    }
-
-    // ---------- Вспомогательное ----------
-    function manhattan(a, b) {
-        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-    }
-
-    function getZoneAt(x, y) {
-        return zones.find(z => z.x === x && z.y === y) || { type: 'plains' };
-    }
-
+    function getSpeed() { return speedMultiplier; }
+    function getTickInterval() { return Math.max(50, Math.round(GAME_CONFIG.TICK_INTERVAL / speedMultiplier)); }
+    function manhattan(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+    function getZoneAt(x, y) { return zones.find(z => z.x === x && z.y === y) || { type: 'plains' }; }
+    
     function buildPath(from, to) {
         const path = [];
         let x = from.x, y = from.y;

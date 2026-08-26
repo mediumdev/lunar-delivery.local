@@ -14,20 +14,20 @@
     <h1 id="game-title">🌘 ЛУННАЯ ДОСТАВКА</h1>
     <div class="stats">
         <div class="stat-block">
-            <span class="label">Кредиты</span>
+            <span class="label" id="label-money">Кредиты</span>
             <span class="value money" id="val-money">0</span>
         </div>
         <div class="stat-block">
-            <span class="label">Рейтинг</span>
+            <span class="label" id="label-reputation">Рейтинг</span>
             <span class="value rep" id="val-reputation">100</span>
             <div class="rep-bar-wrap"><div id="reputation-bar"></div></div>
         </div>
         <div class="stat-block">
-            <span class="label">Сол</span>
+            <span class="label" id="label-sol">Сол</span>
             <span class="value" id="val-sol">1</span>
         </div>
         <div class="stat-block">
-            <span class="label">Тик</span>
+            <span class="label" id="label-tick">Тик</span>
             <span class="value" id="val-tick">0</span>
         </div>
     </div>
@@ -43,21 +43,18 @@
 </header>
 
 <main class="layout">
-    <!-- 1. Левая панель: Роверы (занимает всю высоту благодаря grid-area: rovers) -->
     <aside class="panel left-panel">
         <h2 id="rovers-title">🤖 Роверы</h2>
         <div class="panel-content">
             <div id="rovers-list"></div>
-
             <div class="buy-section">
-                <h3>Купить ровер</h3>
+                <h3 id="buy-title">Купить ровер</h3>
                 <div class="buy-row">
-                    <button class="btn btn-small" id="btn-buy-scout">Разведчик (150💰)</button>
-                    <button class="btn btn-small" id="btn-buy-hauler">Тягач (350💰)</button>
-                    <button class="btn btn-small" id="btn-buy-explorer">Следопыт (550💰)</button>
+                    <button class="btn btn-small" id="btn-buy-scout"></button>
+                    <button class="btn btn-small" id="btn-buy-hauler"></button>
+                    <button class="btn btn-small" id="btn-buy-explorer"></button>
                 </div>
             </div>
-
             <div class="buy-section">
                 <h3 id="legend-title">🗺 Зоны Луны</h3>
                 <div id="legend-list"></div>
@@ -65,12 +62,10 @@
         </div>
     </aside>
 
-    <!-- 2. Центр: Карта -->
     <section class="panel center-panel">
         <div class="map-container"></div>
     </section>
 
-    <!-- 3. Правая панель: Заказы -->
     <aside class="panel right-panel">
         <h2 id="orders-title">📦 Заказы</h2>
         <div class="panel-content">
@@ -78,16 +73,12 @@
         </div>
     </aside>
 
-    <!-- 4. Центр низ: Доставка (ровно под картой) -->
     <section class="panel delivery-panel">
-        <h3 class="bottom-title">🚀 Доставка</h3>
-        <div id="delivery-info" class="panel-content">
-            <div class="hint">Выберите заказ и ровера</div>
-        </div>
+        <h3 class="bottom-title" id="delivery-title">🚀 Доставка</h3>
+        <div id="delivery-info" class="panel-content"></div>
         <button class="btn btn-primary btn-deliver" id="btn-deliver" disabled>🚀 Доставить</button>
     </section>
 
-    <!-- 5. Правый низ: Журнал событий (ровно под заказами) -->
     <aside class="panel events-panel">
         <h3 class="bottom-title" id="events-title">📡 Журнал событий</h3>
         <div id="events-list" class="panel-content"></div>
@@ -98,11 +89,103 @@
 
 <div class="modal" id="modal-gameover">
     <div class="modal-content">
-        <h2>💀 РЕЙТИНГ БАЗЫ УТРАЧЕН</h2>
+        <h2 id="gameover-title">💀 РЕЙТИНГ БАЗЫ УТРАЧЕН</h2>
         <p id="gameover-text"></p>
-        <button class="btn btn-primary" onclick="location.reload()">Новая игра</button>
+        <button class="btn btn-primary" id="btn-restart">Новая игра</button>
     </div>
 </div>
+
+<!-- ================= ШАБЛОНЫ (TEMPLATES) ================= -->
+<template id="tmpl-rover-card">
+    <div class="rover-card">
+        <div class="rover-header">
+            <span class="rover-name"></span>
+            <span class="rover-type"></span>
+        </div>
+        <div class="rover-status"></div>
+        <div class="rover-delivery-info" style="display: none;">
+            <div class="delivery-badge"></div>
+            <div class="delivery-progress">
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+                <span class="progress-text"></span>
+            </div>
+        </div>
+        <div class="stat">
+            <span class="stat-label-battery"></span>
+            <div class="bar"><div class="bar-fill battery-fill"></div></div>
+            <span class="stat-val-battery"></span>
+        </div>
+        <div class="stat">
+            <span class="stat-label-capacity"></span>
+            <span class="stat-val-capacity"></span>
+        </div>
+        <div class="rover-actions"></div>
+    </div>
+</template>
+
+<template id="tmpl-order-card">
+    <div class="order-card">
+        <div class="order-header">
+            <span class="order-id"></span>
+            <span class="order-zone"></span>
+        </div>
+        <div class="order-stats">
+            <div><span>📦</span> <span class="order-weight"></span></div>
+            <div><span>💰</span> <span class="order-reward"></span></div>
+            <div><span>⏱</span> <span class="order-urgency"></span></div>
+            <div><span>☠</span> <span class="order-risk"></span></div>
+        </div>
+    </div>
+</template>
+
+<template id="tmpl-event-item">
+    <div class="event-item">
+        <span class="event-tick"></span>
+        <span class="event-text"></span>
+    </div>
+</template>
+
+<template id="tmpl-legend-item">
+    <div class="legend-item">
+        <span class="legend-swatch"></span>
+        <span class="legend-label"></span>
+        <span class="legend-stats"></span>
+    </div>
+</template>
+
+<template id="tmpl-active-delivery-item">
+    <div class="active-delivery-item">
+        <span class="active-rover"></span>
+        <span class="active-arrow">→</span>
+        <span class="active-order"></span>
+        <div class="active-progress">
+            <div class="progress-fill"></div>
+        </div>
+        <span class="active-percent"></span>
+    </div>
+</template>
+
+<template id="tmpl-delivery-row">
+    <div class="delivery-row">
+        <span class="delivery-label"></span>
+        <b class="delivery-value"></b>
+    </div>
+</template>
+
+<template id="tmpl-rover-marker">
+    <div class="rover-marker">
+        <span class="rover-body"></span>
+        <span class="rover-order-badge" style="display: none;"></span>
+    </div>
+</template>
+
+<template id="tmpl-order-marker">
+    <div class="order-marker">
+        <span class="order-id"></span>
+        <span class="order-urgency"></span>
+    </div>
+</template>
+<!-- ======================================================= -->
 
 <script src="js/constants.js"></script>
 <script src="js/texts.js"></script>
